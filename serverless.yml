@@ -1,0 +1,20 @@
+service: instagram-intelligence
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  memorySize: 1024
+  timeout: 30
+  environment:
+    APIFY_TOKEN: ${env:APIFY_TOKEN, 'CHANGE_ME'}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY, 'CHANGE_ME'}
+  httpApi:
+    cors: true
+
+# Note: For Next.js on Lambda, AWS Amplify is recommended
+# This serverless.yml is a basic template - you may need @sls-next/lambda-at-edge
+# or consider using AWS Amplify instead (see DEPLOYMENT.md)
+
