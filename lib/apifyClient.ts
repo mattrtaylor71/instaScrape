@@ -15,9 +15,16 @@ export function getApifyClient(): ApifyClient {
   }
 
   const token = process.env.APIFY_TOKEN;
+  
+  // Debug logging (only in development or if explicitly enabled)
   if (!token) {
+    console.error('APIFY_TOKEN is not available. Available env vars:', 
+      Object.keys(process.env).filter(k => k.includes('APIFY') || k.includes('OPENAI'))
+    );
     throw new Error(
-      'APIFY_TOKEN environment variable is not set. Please set it in your environment variables (AWS Amplify: App settings > Environment variables, or locally in .env.local file).'
+      'APIFY_TOKEN environment variable is not set. ' +
+      'If you just added it in AWS Amplify, you MUST redeploy the app for it to take effect. ' +
+      'Go to AWS Amplify Console → Your App → Hosting → Environment variables → Click "Redeploy this version"'
     );
   }
 

@@ -50,10 +50,31 @@ export default function Home() {
       if (data.credits !== undefined) {
         setCredits(data.credits);
       }
+      if (data.error) {
+        console.error('Credits API error:', data.error);
+      }
     } catch (error) {
       console.error('Failed to fetch credits:', error);
+      // Set to 0 if fetch fails
+      setCredits(0);
     }
   };
+
+  // Check environment variables on mount
+  useEffect(() => {
+    if (hasAccess) {
+      // Check env vars for debugging
+      fetch('/api/check-env')
+        .then(res => res.json())
+        .then(data => {
+          console.log('Environment variables check:', data);
+          if (!data.apifyToken.exists) {
+            console.warn('⚠️ APIFY_TOKEN is not set! Redeploy required if you just added it.');
+          }
+        })
+        .catch(err => console.error('Failed to check env vars:', err));
+    }
+  }, [hasAccess]);
 
   const handleAccessGranted = () => {
     setHasAccess(true);
