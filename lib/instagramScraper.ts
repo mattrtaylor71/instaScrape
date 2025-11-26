@@ -280,7 +280,9 @@ export async function scrapePostCommentsByUrl(
               `post-${Date.now()}`,
           url: (typeof postItem.url === 'string' ? postItem.url : undefined) || url,
           caption: typeof postItem.caption === 'string' ? postItem.caption : undefined,
-          timestamp: postItem.timestamp,
+          timestamp: (typeof postItem.timestamp === 'string' || postItem.timestamp instanceof Date) 
+            ? postItem.timestamp 
+            : undefined,
           likeCount: typeof postItem.likesCount === 'number' ? postItem.likesCount : undefined,
           commentCount: typeof postItem.commentsCount === 'number' ? postItem.commentsCount : undefined,
           imageUrl: (typeof postItem.displayUrl === 'string' ? postItem.displayUrl : undefined) || 
