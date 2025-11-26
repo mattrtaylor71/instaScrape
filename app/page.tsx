@@ -233,6 +233,11 @@ export default function Home() {
                 💰 {credits.toLocaleString()} Credits
               </div>
             )}
+            {credits === null && (
+              <div className="bg-gray-400 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg">
+                💰 Loading...
+              </div>
+            )}
           </div>
           <p className="text-xl text-gray-700 font-medium">
             Analyze Instagram profiles and posts with AI-powered insights

@@ -11,42 +11,60 @@ export async function getApifyCredits(): Promise<number> {
     // Get user info which includes account balance
     const user = await client.user().get();
     
+    // Log the full user object to see what fields are available
+    console.log('Apify user object:', JSON.stringify(user, null, 2));
+    
     // Apify user object may have different balance fields
-    // Common fields: usdBalance, balance, accountBalance, or monthlyUsageLimit
-    let balance: number = 0;
-    
-    // Try to get balance from various possible fields
+    // Try common field names for account balance
     const userAny = user as any;
-    const balanceValue = userAny.usdBalance ?? 
-                        userAny.balance ?? 
-                        userAny.accountBalance ??
-                        userAny.monthlyUsageLimit ??
-                        userAny.usdMonthlyUsageLimit ??
-                        0;
     
-    // Convert to number if it's a string (e.g., "$10.50" -> 10.50)
-    if (typeof balanceValue === 'string') {
-      balance = parseFloat(balanceValue.replace(/[^0-9.]/g, '')) || 0;
-    } else if (typeof balanceValue === 'number') {
-      balance = balanceValue;
+    // Try various possible balance fields
+    let balance: number = 0;
+    const possibleFields = [
+      'usdBalance',
+      'balance',
+      'accountBalance',
+      'usdAccountBalance',
+      'billingBalance',
+      'usdBillingBalance',
+      'monthlyUsageLimit',
+      'usdMonthlyUsageLimit',
+      'remainingUsageLimit',
+      'usdRemainingUsageLimit',
+    ];
+    
+    for (const field of possibleFields) {
+      if (userAny[field] !== undefined && userAny[field] !== null) {
+        const value = userAny[field];
+        if (typeof value === 'string') {
+          const parsed = parseFloat(value.replace(/[^0-9.]/g, ''));
+          if (!isNaN(parsed) && parsed > 0) {
+            balance = parsed;
+            console.log(`Found balance in field '${field}':`, balance);
+            break;
+          }
+        } else if (typeof value === 'number' && value > 0) {
+          balance = value;
+          console.log(`Found balance in field '${field}':`, balance);
+          break;
+        }
+      }
     }
     
-    // If balance is 0 or negative, try to get from usage limits or other fields
-    if (balance <= 0) {
-      // Some accounts might show remaining usage limit
-      const remaining = userAny.remainingUsageLimit ?? userAny.usdRemainingUsageLimit ?? 0;
-      if (remaining > 0) {
-        balance = typeof remaining === 'string' 
-          ? parseFloat(remaining.replace(/[^0-9.]/g, '')) || 0
-          : remaining;
+    // If still 0, check if there's a nested object with balance info
+    if (balance <= 0 && userAny.billing) {
+      const billing = userAny.billing;
+      if (billing.balance !== undefined) {
+        balance = typeof billing.balance === 'string'
+          ? parseFloat(billing.balance.replace(/[^0-9.]/g, '')) || 0
+          : billing.balance || 0;
       }
     }
     
     // Convert to credits: multiply by 100 and round to integer
     const credits = Math.floor(balance * 100);
     
-    console.log('Apify user data:', JSON.stringify(user, null, 2));
-    console.log('Calculated credits:', credits, 'from balance:', balance);
+    console.log('Final calculated credits:', credits, 'from balance:', balance);
     
     return credits;
   } catch (error: any) {
@@ -55,4 +73,3 @@ export async function getApifyCredits(): Promise<number> {
     return 0;
   }
 }
-
