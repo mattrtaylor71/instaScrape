@@ -94,15 +94,31 @@ export async function scrapeProfileAndPostsByUrl(
       (item: any) => item.type === 'Profile' || (item.username && !item.shortCode && !item.shortcode && !item.postUrl)
     ) || items[0];
 
+    // Ensure username is always a string
+    const profileUsername = (typeof profileItem.username === 'string' && profileItem.username) 
+      ? profileItem.username 
+      : username;
+    
     const profile: ProfileInfo = {
-      username: profileItem.username || username,
-      fullName: profileItem.fullName || profileItem.full_name,
-      bio: profileItem.biography || profileItem.bio,
-      followers: profileItem.followersCount || profileItem.followers_count || profileItem.followers,
-      following: profileItem.followsCount || profileItem.follows_count || profileItem.following,
-      postCount: profileItem.postsCount || profileItem.posts_count || profileItem.posts,
-      profileUrl: `https://www.instagram.com/${profileItem.username || username}/`,
-      profilePicUrl: profileItem.profilePicUrl || profileItem.profilePicUrlHD || profileItem.profile_pic_url || profileItem.profile_pic_url_hd,
+      username: profileUsername,
+      fullName: (typeof profileItem.fullName === 'string' ? profileItem.fullName : undefined) || 
+                (typeof profileItem.full_name === 'string' ? profileItem.full_name : undefined),
+      bio: (typeof profileItem.biography === 'string' ? profileItem.biography : undefined) || 
+           (typeof profileItem.bio === 'string' ? profileItem.bio : undefined),
+      followers: (typeof profileItem.followersCount === 'number' ? profileItem.followersCount : undefined) || 
+                 (typeof profileItem.followers_count === 'number' ? profileItem.followers_count : undefined) || 
+                 (typeof profileItem.followers === 'number' ? profileItem.followers : undefined),
+      following: (typeof profileItem.followsCount === 'number' ? profileItem.followsCount : undefined) || 
+                 (typeof profileItem.follows_count === 'number' ? profileItem.follows_count : undefined) || 
+                 (typeof profileItem.following === 'number' ? profileItem.following : undefined),
+      postCount: (typeof profileItem.postsCount === 'number' ? profileItem.postsCount : undefined) || 
+                 (typeof profileItem.posts_count === 'number' ? profileItem.posts_count : undefined) || 
+                 (typeof profileItem.posts === 'number' ? profileItem.posts : undefined),
+      profileUrl: `https://www.instagram.com/${profileUsername}/`,
+      profilePicUrl: (typeof profileItem.profilePicUrl === 'string' ? profileItem.profilePicUrl : undefined) || 
+                     (typeof profileItem.profilePicUrlHD === 'string' ? profileItem.profilePicUrlHD : undefined) || 
+                     (typeof profileItem.profile_pic_url === 'string' ? profileItem.profile_pic_url : undefined) || 
+                     (typeof profileItem.profile_pic_url_hd === 'string' ? profileItem.profile_pic_url_hd : undefined),
     };
 
     // Extract posts from latestPosts array (nested in profile item) or from items
