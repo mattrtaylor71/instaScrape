@@ -17,7 +17,7 @@ export function getApifyClient(): ApifyClient {
   const token = process.env.APIFY_TOKEN;
   if (!token) {
     throw new Error(
-      'APIFY_TOKEN environment variable is not set. Please set it in your .env.local file.'
+      'APIFY_TOKEN environment variable is not set. Please set it in your environment variables (AWS Amplify: App settings > Environment variables, or locally in .env.local file).'
     );
   }
 

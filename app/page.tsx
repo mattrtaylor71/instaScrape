@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AccessGate from '@/components/AccessGate';
 import type {
   ScrapeResponse,
   ScrapedProfileResult,
@@ -10,6 +11,8 @@ import type {
 } from '@/types/instagram';
 
 export default function Home() {
+  const [hasAccess, setHasAccess] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
   const [url, setUrl] = useState('');
   const [mode, setMode] = useState<ScrapeMode>('auto');
   const [isScraping, setIsScraping] = useState(false);
@@ -23,6 +26,39 @@ export default function Home() {
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [askError, setAskError] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
+
+  // Check access from localStorage
+  useEffect(() => {
+    const storedAccess = localStorage.getItem('hasAccess');
+    if (storedAccess === 'true') {
+      setHasAccess(true);
+    }
+  }, []);
+
+  // Fetch credits when access is granted
+  useEffect(() => {
+    if (hasAccess) {
+      fetchCredits();
+    }
+  }, [hasAccess]);
+
+  // Fetch credits from API
+  const fetchCredits = async () => {
+    try {
+      const response = await fetch('/api/credits');
+      const data = await response.json();
+      if (data.credits !== undefined) {
+        setCredits(data.credits);
+      }
+    } catch (error) {
+      console.error('Failed to fetch credits:', error);
+    }
+  };
+
+  const handleAccessGranted = () => {
+    setHasAccess(true);
+    localStorage.setItem('hasAccess', 'true');
+  };
 
   // Simulate loading progress during scraping
   useEffect(() => {
@@ -93,6 +129,8 @@ export default function Home() {
       setTimeout(() => {
         setScrapedData(data);
         setIsScraping(false);
+        // Update credits after scraping
+        fetchCredits();
       }, 500);
     } catch (error: any) {
       setScrapeError(error.message || 'An error occurred while scraping');
@@ -156,6 +194,8 @@ export default function Home() {
       ]);
 
       setQuestion('');
+      // Update credits after AI request (might use some)
+      fetchCredits();
     } catch (error: any) {
       setAskError(error.message || 'An error occurred while asking');
       console.error('Ask error:', error);
@@ -174,14 +214,26 @@ export default function Home() {
     }
   };
 
+  // Show access gate if no access
+  if (!hasAccess) {
+    return <AccessGate onAccessGranted={handleAccessGranted} />;
+  }
+
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
+        {/* Header with Credits */}
         <div className="text-center mb-12 animate-float">
-          <h1 className="text-6xl font-extrabold mb-4 gradient-text">
-            Instagram Intelligence
-          </h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-6xl font-extrabold gradient-text">
+              Instagram Intelligence
+            </h1>
+            {credits !== null && (
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg animate-pulse-glow">
+                💰 {credits.toLocaleString()} Credits
+              </div>
+            )}
+          </div>
           <p className="text-xl text-gray-700 font-medium">
             Analyze Instagram profiles and posts with AI-powered insights
           </p>
