@@ -275,14 +275,17 @@ export async function scrapePostCommentsByUrl(
     const postItem = items.find((item: any) => item.type === 'Post' || item.postUrl);
     const post: PostInfo | undefined = postItem
       ? {
-          id: postItem.id || postItem.shortcode,
-          url: postItem.url || url,
-          caption: postItem.caption,
+          id: (typeof postItem.id === 'string' ? postItem.id : undefined) || 
+              (typeof postItem.shortcode === 'string' ? postItem.shortcode : '') || 
+              `post-${Date.now()}`,
+          url: (typeof postItem.url === 'string' ? postItem.url : undefined) || url,
+          caption: typeof postItem.caption === 'string' ? postItem.caption : undefined,
           timestamp: postItem.timestamp,
-          likeCount: postItem.likesCount,
-          commentCount: postItem.commentsCount,
-          imageUrl: postItem.displayUrl || postItem.imageUrl,
-          shortcode: postItem.shortcode,
+          likeCount: typeof postItem.likesCount === 'number' ? postItem.likesCount : undefined,
+          commentCount: typeof postItem.commentsCount === 'number' ? postItem.commentsCount : undefined,
+          imageUrl: (typeof postItem.displayUrl === 'string' ? postItem.displayUrl : undefined) || 
+                    (typeof postItem.imageUrl === 'string' ? postItem.imageUrl : undefined),
+          shortcode: typeof postItem.shortcode === 'string' ? postItem.shortcode : undefined,
         }
       : undefined;
 
