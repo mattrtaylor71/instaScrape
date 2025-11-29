@@ -15,19 +15,26 @@ frontend:
             echo "WARNING: APIFY_TOKEN is not set in Amplify environment variables"
           else
             echo "APIFY_TOKEN=$APIFY_TOKEN" >> .env.production
+            echo "APIFY_TOKEN written to .env.production"
           fi
         - |
           if [ -z "$OPENAI_API_KEY" ]; then
             echo "WARNING: OPENAI_API_KEY is not set in Amplify environment variables"
           else
             echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env.production
+            echo "OPENAI_API_KEY written to .env.production"
           fi
-        - echo "Created .env.production file"
+        - echo "Contents of .env.production:"
+        - cat .env.production || echo "File does not exist"
         - npm run build
+        # Copy .env.production to .next directory so it's included in deployment
+        - cp .env.production .next/.env.production 2>/dev/null || echo "Could not copy to .next"
+        - echo "Build complete"
   artifacts:
     baseDirectory: .next
     files:
       - '**/*'
+      - '.env.production'
   cache:
     paths:
       - node_modules/**/*
