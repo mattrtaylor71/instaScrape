@@ -27,11 +27,13 @@ export default function Home() {
   const [askError, setAskError] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
 
-  // Check access from localStorage
+  // Check access from localStorage (only on client side)
   useEffect(() => {
-    const storedAccess = localStorage.getItem('hasAccess');
-    if (storedAccess === 'true') {
-      setHasAccess(true);
+    if (typeof window !== 'undefined') {
+      const storedAccess = localStorage.getItem('hasAccess');
+      if (storedAccess === 'true') {
+        setHasAccess(true);
+      }
     }
   }, []);
 
