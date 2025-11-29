@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       scrapeType = mode;
     }
 
-    // Perform scraping
+    // Perform scraping with timeout handling
     if (scrapeType === 'profile') {
       try {
         const result = await scrapeProfileAndPostsByUrl(url);
@@ -68,6 +68,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(response);
       } catch (error: any) {
         console.error('Profile scrape error:', error);
+        
+        // Check if it's a timeout error
+        if (error.message?.includes('timeout') || error.message?.includes('504')) {
+          return NextResponse.json(
+            {
+              error: 'Scraping timed out. This can happen with large profiles. Try a smaller profile or increase Lambda timeout in AWS Amplify Console.',
+              details: 'The scraping operation took too long. AWS Lambda has a default timeout that may need to be increased.',
+            },
+            { status: 504 }
+          );
+        }
+        
         return NextResponse.json(
           {
             error: error.message || 'Failed to scrape profile',
@@ -87,6 +99,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(response);
       } catch (error: any) {
         console.error('Post scrape error:', error);
+        
+        // Check if it's a timeout error
+        if (error.message?.includes('timeout') || error.message?.includes('504')) {
+          return NextResponse.json(
+            {
+              error: 'Scraping timed out. This can happen with posts that have many comments. Try increasing Lambda timeout in AWS Amplify Console.',
+              details: 'The scraping operation took too long. AWS Lambda has a default timeout that may need to be increased.',
+            },
+            { status: 504 }
+          );
+        }
+        
         return NextResponse.json(
           {
             error: error.message || 'Failed to scrape post',
