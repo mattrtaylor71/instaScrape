@@ -1,13 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone', // Optimized for serverless deployment
-  // For AWS Amplify, use 'export' is not needed
-  // For Lambda, standalone is better
-  // Ensure .env.production is loaded
-  env: {
-    // These will be available at build time, but for runtime we need .env.production
-  },
+  // Remove 'standalone' output - AWS Amplify handles this differently
+  // For AWS Amplify SSR, we don't need standalone mode
+  // output: 'standalone', // This might prevent env vars from being available at runtime
 };
 
 module.exports = nextConfig;
