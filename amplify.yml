@@ -9,6 +9,20 @@ frontend:
         - npm ci
     build:
       commands:
+        # Write environment variables to .env.production for Next.js runtime
+        - |
+          if [ -z "$APIFY_TOKEN" ]; then
+            echo "WARNING: APIFY_TOKEN is not set in Amplify environment variables"
+          else
+            echo "APIFY_TOKEN=$APIFY_TOKEN" >> .env.production
+          fi
+        - |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "WARNING: OPENAI_API_KEY is not set in Amplify environment variables"
+          else
+            echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env.production
+          fi
+        - echo "Created .env.production file"
         - npm run build
   artifacts:
     baseDirectory: .next
