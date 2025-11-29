@@ -7,11 +7,26 @@ import { getApifyClient } from './apifyClient';
  */
 export async function getApifyCredits(): Promise<number> {
   try {
-    const client = getApifyClient();
+    const token = process.env.APIFY_TOKEN;
+    if (!token) {
+      throw new Error('APIFY_TOKEN is not set');
+    }
     
-    // Use the correct API endpoint: /v2/users/me/limits
-    // This gives us currentUsageUsd and maxMonthlyUsageUsd
-    const limits = await client.users.getLimits();
+    // Make direct HTTP request to Apify API
+    // Endpoint: GET https://api.apify.com/v2/users/me/limits
+    const response = await fetch('https://api.apify.com/v2/users/me/limits', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Apify API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const limits = await response.json();
     
     console.log('Apify limits object:', JSON.stringify(limits, null, 2));
     
