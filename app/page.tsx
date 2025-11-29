@@ -46,17 +46,37 @@ export default function Home() {
 
   // Fetch credits from API
   const fetchCredits = async () => {
+    console.log('=== Frontend: fetchCredits called ===');
     try {
+      console.log('Fetching from /api/credits...');
       const response = await fetch('/api/credits');
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
       const data = await response.json();
+      console.log('Response data:', JSON.stringify(data, null, 2));
+      
       if (data.credits !== undefined) {
+        console.log('Setting credits to:', data.credits);
         setCredits(data.credits);
+      } else {
+        console.warn('Credits not in response data');
       }
+      
       if (data.error) {
         console.error('Credits API error:', data.error);
+        console.error('Error details:', data.details);
       }
-    } catch (error) {
-      console.error('Failed to fetch credits:', error);
+      
+      if (!data.success) {
+        console.warn('Credits API returned success: false');
+        console.warn('Error:', data.error);
+      }
+    } catch (error: any) {
+      console.error('=== ERROR in fetchCredits ===');
+      console.error('Error type:', error.constructor.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       // Set to 0 if fetch fails
       setCredits(0);
     }
