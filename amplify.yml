@@ -4,12 +4,11 @@ frontend:
     preBuild:
       commands:
         - echo "Checking environment variables..."
-        - echo "APIFY_TOKEN exists: $([ -z "$APIFY_TOKEN" ] && echo 'NO' || echo 'YES')"
-        - echo "OPENAI_API_KEY exists: $([ -z "$OPENAI_API_KEY" ] && echo 'NO' || echo 'YES')"
+        - 'echo "APIFY_TOKEN exists: $([ -z "$APIFY_TOKEN" ] && echo '\''NO'\'' || echo '\''YES'\'')"'
+        - 'echo "OPENAI_API_KEY exists: $([ -z "$OPENAI_API_KEY" ] && echo '\''NO'\'' || echo '\''YES'\'')"'
         - npm ci
     build:
       commands:
-        # Write environment variables to .env.production for Next.js runtime
         - |
           if [ -z "$APIFY_TOKEN" ]; then
             echo "WARNING: APIFY_TOKEN is not set in Amplify environment variables"
@@ -27,7 +26,6 @@ frontend:
         - echo "Contents of .env.production:"
         - cat .env.production || echo "File does not exist"
         - npm run build
-        # Copy .env.production to .next directory so it's included in deployment
         - cp .env.production .next/.env.production 2>/dev/null || echo "Could not copy to .next"
         - echo "Build complete"
   artifacts:
