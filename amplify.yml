@@ -4,8 +4,18 @@ frontend:
     preBuild:
       commands:
         - echo "Checking environment variables..."
-        - 'echo "APIFY_TOKEN exists: $([ -z "$APIFY_TOKEN" ] && echo '\''NO'\'' || echo '\''YES'\'')"'
-        - 'echo "OPENAI_API_KEY exists: $([ -z "$OPENAI_API_KEY" ] && echo '\''NO'\'' || echo '\''YES'\'')"'
+        - |
+          if [ -z "$APIFY_TOKEN" ]; then
+            echo "APIFY_TOKEN exists: NO"
+          else
+            echo "APIFY_TOKEN exists: YES"
+          fi
+        - |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY exists: NO"
+          else
+            echo "OPENAI_API_KEY exists: YES"
+          fi
         - npm ci
     build:
       commands:
