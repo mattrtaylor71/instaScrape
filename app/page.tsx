@@ -47,36 +47,71 @@ export default function Home() {
   // Fetch credits from API
   const fetchCredits = async () => {
     console.log('=== Frontend: fetchCredits called ===');
+    console.log('Timestamp:', new Date().toISOString());
+    
     try {
-      console.log('Fetching from /api/credits...');
-      const response = await fetch('/api/credits');
+      console.log('Step 1: Fetching from /api/credits...');
+      const startTime = Date.now();
+      
+      const response = await fetch('/api/credits', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add cache busting
+        cache: 'no-store',
+      });
+      
+      const endTime = Date.now();
+      console.log('Step 2: Received response');
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('Request duration:', `${(endTime - startTime) / 1000}s`);
       
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('ERROR: Response not OK');
+        console.error('Status:', response.status, response.statusText);
+        console.error('Error body:', errorText);
+        setCredits(0);
+        return;
+      }
+      
+      console.log('Step 3: Parsing JSON response...');
       const data = await response.json();
-      console.log('Response data:', JSON.stringify(data, null, 2));
+      console.log('Step 4: Response data:', JSON.stringify(data, null, 2));
+      console.log('Data type:', typeof data);
+      console.log('Data keys:', Object.keys(data));
       
-      if (data.credits !== undefined) {
-        console.log('Setting credits to:', data.credits);
+      if (data.credits !== undefined && data.credits !== null) {
+        console.log('Step 5: Setting credits to:', data.credits);
+        console.log('Credits type:', typeof data.credits);
         setCredits(data.credits);
       } else {
-        console.warn('Credits not in response data');
+        console.warn('WARNING: Credits not in response data');
+        console.warn('Available keys:', Object.keys(data));
+        setCredits(0);
       }
       
       if (data.error) {
-        console.error('Credits API error:', data.error);
+        console.error('ERROR: Credits API returned error');
+        console.error('Error message:', data.error);
         console.error('Error details:', data.details);
       }
       
-      if (!data.success) {
-        console.warn('Credits API returned success: false');
+      if (data.success === false) {
+        console.warn('WARNING: Credits API returned success: false');
         console.warn('Error:', data.error);
       }
+      
+      console.log('=== Frontend: fetchCredits completed ===');
     } catch (error: any) {
       console.error('=== ERROR in fetchCredits ===');
-      console.error('Error type:', error.constructor.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      console.error('Error type:', error?.constructor?.name || 'Unknown');
+      console.error('Error message:', error?.message || 'Unknown error');
+      console.error('Error stack:', error?.stack);
+      console.error('Full error object:', error);
       // Set to 0 if fetch fails
       setCredits(0);
     }
