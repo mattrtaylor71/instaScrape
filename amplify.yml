@@ -3,6 +3,9 @@ frontend:
   phases:
     preBuild:
       commands:
+        - echo "Checking environment variables..."
+        - echo "APIFY_TOKEN exists: $([ -z "$APIFY_TOKEN" ] && echo 'NO' || echo 'YES')"
+        - echo "OPENAI_API_KEY exists: $([ -z "$OPENAI_API_KEY" ] && echo 'NO' || echo 'YES')"
         - npm ci
     build:
       commands:
