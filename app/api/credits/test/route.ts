@@ -24,12 +24,12 @@ export async function GET(request: NextRequest) {
   if (hasToken) {
     try {
       console.log('Attempting API call...');
-      const apiUrl = 'https://api.apify.com/v2/users/me/limits';
+      // Apify API requires token as query parameter
+      const apiUrl = `https://api.apify.com/v2/users/me/limits?token=${encodeURIComponent(token)}`;
       
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

@@ -23,13 +23,13 @@ export async function getApifyCredits(): Promise<number> {
     
     // Step 2: Make API request
     console.log('Step 2: Making HTTP request to Apify API...');
-    const apiUrl = 'https://api.apify.com/v2/users/me/limits';
-    console.log('API URL:', apiUrl);
+    // Apify API requires token as query parameter, not Authorization header
+    const apiUrl = `https://api.apify.com/v2/users/me/limits?token=${encodeURIComponent(token)}`;
+    console.log('API URL:', apiUrl.replace(token, 'TOKEN_HIDDEN'));
     
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
