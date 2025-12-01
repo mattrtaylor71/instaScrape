@@ -79,27 +79,31 @@ export async function getApifyCredits(): Promise<number> {
     console.log('Full limits structure:', JSON.stringify(limits, null, 2));
     
     // Apify API structure: data.limits.maxMonthlyUsageUsd and data.current.monthlyUsageUsd
-    const maxMonthlyUsageUsd = limits.data?.limits?.maxMonthlyUsageUsd ?? 
-                               limits.limits?.maxMonthlyUsageUsd ??
-                               limits.maxMonthlyUsageUsd ??
-                               null;
+    // Based on the actual API response structure
+    const maxMonthlyUsageUsd = limits.data?.limits?.maxMonthlyUsageUsd;
+    const currentUsageUsd = limits.data?.current?.monthlyUsageUsd;
     
-    const currentUsageUsd = limits.data?.current?.monthlyUsageUsd ??
-                            limits.current?.monthlyUsageUsd ??
-                            limits.currentUsageUsd ??
-                            limits.monthlyUsageUsd ??
-                            null;
+    console.log('Found maxMonthlyUsageUsd:', maxMonthlyUsageUsd, 'at path: data.limits.maxMonthlyUsageUsd');
+    console.log('Found currentUsageUsd (monthlyUsageUsd):', currentUsageUsd, 'at path: data.current.monthlyUsageUsd');
     
-    console.log('Found maxMonthlyUsageUsd:', maxMonthlyUsageUsd, 'at path:', 
-      limits.data?.limits?.maxMonthlyUsageUsd !== undefined ? 'data.limits.maxMonthlyUsageUsd' :
-      limits.limits?.maxMonthlyUsageUsd !== undefined ? 'limits.maxMonthlyUsageUsd' :
-      limits.maxMonthlyUsageUsd !== undefined ? 'maxMonthlyUsageUsd' : 'NOT FOUND');
+    if (maxMonthlyUsageUsd === undefined || maxMonthlyUsageUsd === null) {
+      console.error('ERROR: maxMonthlyUsageUsd not found in response');
+      console.error('Available paths:', {
+        'data.limits.maxMonthlyUsageUsd': limits.data?.limits?.maxMonthlyUsageUsd,
+        'limits.maxMonthlyUsageUsd': limits.limits?.maxMonthlyUsageUsd,
+        'maxMonthlyUsageUsd': limits.maxMonthlyUsageUsd,
+      });
+    }
     
-    console.log('Found currentUsageUsd:', currentUsageUsd, 'at path:',
-      limits.data?.current?.monthlyUsageUsd !== undefined ? 'data.current.monthlyUsageUsd' :
-      limits.current?.monthlyUsageUsd !== undefined ? 'current.monthlyUsageUsd' :
-      limits.currentUsageUsd !== undefined ? 'currentUsageUsd' :
-      limits.monthlyUsageUsd !== undefined ? 'monthlyUsageUsd' : 'NOT FOUND');
+    if (currentUsageUsd === undefined || currentUsageUsd === null) {
+      console.error('ERROR: currentUsageUsd (monthlyUsageUsd) not found in response');
+      console.error('Available paths:', {
+        'data.current.monthlyUsageUsd': limits.data?.current?.monthlyUsageUsd,
+        'current.monthlyUsageUsd': limits.current?.monthlyUsageUsd,
+        'currentUsageUsd': limits.currentUsageUsd,
+        'monthlyUsageUsd': limits.monthlyUsageUsd,
+      });
+    }
     
     console.log('Extracted currentUsageUsd:', currentUsageUsd, '(type:', typeof currentUsageUsd, ')');
     console.log('Extracted maxMonthlyUsageUsd:', maxMonthlyUsageUsd, '(type:', typeof maxMonthlyUsageUsd, ')');
