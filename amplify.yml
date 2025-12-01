@@ -40,16 +40,16 @@ frontend:
         - echo "Build complete"
     postBuild:
       commands:
-        - echo "Post-build: Attempting to update Lambda function timeouts..."
+        - echo "Post-build step: Attempting to update Lambda function timeouts"
         - |
           if [ -n "$AMPLIFY_APP_ID" ] && command -v aws > /dev/null 2>&1; then
-            echo "AMPLIFY_APP_ID is set, updating Lambda timeouts..."
+            echo "AMPLIFY_APP_ID is set, updating Lambda timeouts"
             chmod +x scripts/update-lambda-timeout.sh 2>/dev/null || true
             export AMPLIFY_BRANCH=${AWS_BRANCH:-main}
-            ./scripts/update-lambda-timeout.sh || echo "Warning: Could not update Lambda timeouts automatically. Run the script manually after deployment."
+            ./scripts/update-lambda-timeout.sh || echo "Warning: Could not update Lambda timeouts automatically"
           else
-            echo "Skipping Lambda timeout update (AMPLIFY_APP_ID not set or AWS CLI not available)"
-            echo "To enable automatic timeout updates, set AMPLIFY_APP_ID environment variable in Amplify Console"
+            echo "Skipping Lambda timeout update"
+            echo "Set AMPLIFY_APP_ID environment variable in Amplify Console to enable"
           fi
   artifacts:
     baseDirectory: .next
