@@ -2,8 +2,10 @@ import { getApifyClient } from './apifyClient';
 
 /**
  * Get Apify account remaining credits.
- * Credits = (maxMonthlyUsageUsd - currentUsageUsd) * 100, without dollar sign.
+ * Credits = (maxMonthlyUsageUsd - monthlyUsageUsd) * 10, without dollar sign.
  * This represents remaining credits available for the current billing cycle.
+ * 
+ * Example: $39 max - $2.99 used = $36.01 remaining = 360 credits
  */
 // Store last API response for debugging
 let lastApiResponse: any = null;
@@ -72,30 +74,32 @@ export async function getApifyCredits(): Promise<number> {
     console.log('Limits object keys:', Object.keys(limits));
     console.log('Limits object type:', typeof limits);
     
-    // Step 5: Extract values - check all possible field names
+    // Step 5: Extract values - Apify API returns nested structure
     console.log('Step 5: Extracting usage information...');
-    console.log('Checking for currentUsageUsd:', limits.currentUsageUsd);
-    console.log('Checking for maxMonthlyUsageUsd:', limits.maxMonthlyUsageUsd);
-    console.log('Checking for currentUsage:', limits.currentUsage);
-    console.log('Checking for maxUsage:', limits.maxUsage);
-    console.log('Checking for usage:', limits.usage);
-    console.log('Checking for limits:', limits.limits);
+    console.log('Full limits structure:', JSON.stringify(limits, null, 2));
     
-    // Try multiple possible field names
-    const currentUsageUsd = limits.currentUsageUsd ?? 
-                            limits.currentUsage ?? 
-                            limits.usage?.current ?? 
-                            limits.usage?.currentUsageUsd ?? 
-                            limits.data?.currentUsageUsd ??
+    // Apify API structure: data.limits.maxMonthlyUsageUsd and data.current.monthlyUsageUsd
+    const maxMonthlyUsageUsd = limits.data?.limits?.maxMonthlyUsageUsd ?? 
+                               limits.limits?.maxMonthlyUsageUsd ??
+                               limits.maxMonthlyUsageUsd ??
+                               null;
+    
+    const currentUsageUsd = limits.data?.current?.monthlyUsageUsd ??
+                            limits.current?.monthlyUsageUsd ??
+                            limits.currentUsageUsd ??
+                            limits.monthlyUsageUsd ??
                             null;
     
-    const maxMonthlyUsageUsd = limits.maxMonthlyUsageUsd ?? 
-                               limits.maxUsage ?? 
-                               limits.usage?.max ?? 
-                               limits.usage?.maxMonthlyUsageUsd ?? 
-                               limits.limits?.maxMonthlyUsageUsd ??
-                               limits.data?.maxMonthlyUsageUsd ??
-                               null;
+    console.log('Found maxMonthlyUsageUsd:', maxMonthlyUsageUsd, 'at path:', 
+      limits.data?.limits?.maxMonthlyUsageUsd !== undefined ? 'data.limits.maxMonthlyUsageUsd' :
+      limits.limits?.maxMonthlyUsageUsd !== undefined ? 'limits.maxMonthlyUsageUsd' :
+      limits.maxMonthlyUsageUsd !== undefined ? 'maxMonthlyUsageUsd' : 'NOT FOUND');
+    
+    console.log('Found currentUsageUsd:', currentUsageUsd, 'at path:',
+      limits.data?.current?.monthlyUsageUsd !== undefined ? 'data.current.monthlyUsageUsd' :
+      limits.current?.monthlyUsageUsd !== undefined ? 'current.monthlyUsageUsd' :
+      limits.currentUsageUsd !== undefined ? 'currentUsageUsd' :
+      limits.monthlyUsageUsd !== undefined ? 'monthlyUsageUsd' : 'NOT FOUND');
     
     console.log('Extracted currentUsageUsd:', currentUsageUsd, '(type:', typeof currentUsageUsd, ')');
     console.log('Extracted maxMonthlyUsageUsd:', maxMonthlyUsageUsd, '(type:', typeof maxMonthlyUsageUsd, ')');
@@ -115,11 +119,11 @@ export async function getApifyCredits(): Promise<number> {
     console.log('Remaining (USD):', remainingUsd);
     console.log('Remaining calculation: maxUsage (', maxUsage, ') - currentUsage (', currentUsage, ') =', remainingUsd);
     
-    // Step 7: Convert to credits
-    console.log('Step 7: Converting to credits (multiply by 100)...');
-    const credits = Math.floor(remainingUsd * 100);
+    // Step 7: Convert to credits (multiply by 10, not 100)
+    console.log('Step 7: Converting to credits (multiply by 10)...');
+    const credits = Math.floor(remainingUsd * 10);
     console.log('Final calculated credits:', credits);
-    console.log('Credits calculation: remainingUsd (', remainingUsd, ') * 100 =', credits);
+    console.log('Credits calculation: remainingUsd (', remainingUsd, ') * 10 =', credits);
     
     console.log('=== SUCCESS: getApifyCredits completed ===');
     return credits;
