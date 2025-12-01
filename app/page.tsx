@@ -196,10 +196,35 @@ export default function Home() {
         body: JSON.stringify({ url: url.trim(), mode }),
       });
 
-      const data = await response.json();
+      // Handle timeout errors before trying to parse JSON
+      if (response.status === 504) {
+        throw new Error(
+          'Scraping timed out. Instagram scraping can take several minutes. ' +
+          'The request may still be processing on the server. Please wait a moment and try again, ' +
+          'or try with a profile that has fewer posts.'
+        );
+      }
+
+      // Try to parse JSON, but handle empty responses
+      let data;
+      try {
+        const text = await response.text();
+        if (!text) {
+          throw new Error('Empty response from server');
+        }
+        data = JSON.parse(text);
+      } catch (parseError: any) {
+        if (response.status >= 500) {
+          throw new Error(
+            'Server error occurred. The scraping may still be processing. ' +
+            'Please wait a moment and try again.'
+          );
+        }
+        throw new Error('Failed to parse server response');
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to scrape');
+        throw new Error(data?.error || `Failed to scrape (${response.status})`);
       }
 
       setLoadingProgress(100);
