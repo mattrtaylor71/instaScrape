@@ -66,7 +66,9 @@ async function updateLambdaTimeouts() {
     // Update each function
     for (const func of filteredFunctions) {
       const functionName = func.FunctionName;
-      console.log(`Updating ${functionName}...`);
+      const currentTimeout = func.Timeout || 'unknown';
+      console.log(`\n📋 Function: ${functionName}`);
+      console.log(`   Current timeout: ${currentTimeout} seconds`);
 
       // Determine timeout based on function name
       // For Next.js API routes, we want to set high timeouts for all of them
@@ -75,34 +77,44 @@ async function updateLambdaTimeouts() {
       const nameLower = functionName.toLowerCase();
       if (nameLower.includes('scrape') || nameLower.includes('/api/scrape')) {
         timeout = 900; // 15 minutes for scraping
-        console.log('  Setting timeout to 900 seconds (15 minutes) for scraping function');
+        console.log('   ⚙️  Target timeout: 900 seconds (15 minutes) - scraping function');
       } else if (nameLower.includes('ask') || nameLower.includes('/api/ask')) {
         timeout = 300; // 5 minutes for AI requests
-        console.log('  Setting timeout to 300 seconds (5 minutes) for AI function');
+        console.log('   ⚙️  Target timeout: 300 seconds (5 minutes) - AI function');
       } else if (nameLower.includes('api') || nameLower.includes('route') || nameLower.includes('ssr')) {
         // Any API route gets 15 minutes to be safe
         timeout = 900;
-        console.log('  Setting timeout to 900 seconds (15 minutes) for API route');
+        console.log('   ⚙️  Target timeout: 900 seconds (15 minutes) - API route');
       } else {
         timeout = 900; // Default to max for any Amplify function
-        console.log('  Setting timeout to 900 seconds (15 minutes) for other functions');
+        console.log('   ⚙️  Target timeout: 900 seconds (15 minutes) - default');
+      }
+
+      // Only update if timeout needs to change
+      if (currentTimeout === timeout) {
+        console.log(`   ✅ Timeout already set to ${timeout} seconds, skipping update`);
+        continue;
       }
 
       try {
+        console.log(`   🔄 Updating timeout from ${currentTimeout}s to ${timeout}s...`);
         const updateCommand = new UpdateFunctionConfigurationCommand({
           FunctionName: functionName,
           Timeout: timeout,
         });
         await lambda.send(updateCommand);
-        console.log(`  ✅ Successfully updated ${functionName} timeout to ${timeout} seconds\n`);
+        console.log(`   ✅ Successfully updated timeout to ${timeout} seconds`);
       } catch (error) {
-        console.error(`  ❌ Failed to update ${functionName}:`, error.message);
+        console.error(`   ❌ Failed to update: ${error.message}`);
       }
     }
 
-    console.log('✨ Lambda timeout update complete!');
-    console.log('\nNote: Amplify may reset these settings on the next deployment.');
-    console.log('Consider running this script after each deployment, or set up a CI/CD step.');
+    console.log('\n✨ Lambda timeout update complete!');
+    console.log('\n📊 Summary:');
+    console.log(`   - Total functions found: ${response.Functions.length}`);
+    console.log(`   - Functions updated: ${filteredFunctions.length}`);
+    console.log('\n⚠️  Note: Amplify may reset these settings on the next deployment.');
+    console.log('   This script runs automatically after each build to maintain timeouts.');
   } catch (error) {
     console.error('❌ Error:', error.message);
     process.exit(1);
