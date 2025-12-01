@@ -135,6 +135,15 @@ The application includes comments in the codebase reminding developers of these 
 - Check that the Instagram URL is public and accessible
 - Some Apify Actors may require additional configuration or have usage limits
 
+### 504 Gateway Timeout Error
+- **Cause**: AWS Lambda has a default timeout (usually 30 seconds). Instagram scraping can take several minutes.
+- **Solution**: Increase Lambda timeout in AWS Amplify Console:
+  1. Go to AWS Amplify Console → Your App → App settings → Build settings
+  2. Edit the build settings
+  3. Under "Lambda timeout", increase to maximum (900 seconds / 15 minutes)
+  4. Save and redeploy
+- **Alternative**: The app now defaults to scraping only 10 posts (instead of 20) to reduce scraping time
+
 ### AI answers are slow
 - The OpenAI model used is `gpt-4o-mini` (cost-effective). You can change it in `lib/ai.ts` to `gpt-4` for potentially better results (but higher cost)
 
