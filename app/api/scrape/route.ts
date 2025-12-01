@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scrapeProfileAndPostsByUrl, scrapePostCommentsByUrl } from '@/lib/instagramScraper';
-import { jobQueue } from '@/lib/jobQueue';
 import type { ScrapeRequest, ScrapeResponse } from '@/types/instagram';
 
 function parseInstagramUrl(url: string): 'profile' | 'post' {
@@ -58,50 +57,40 @@ export async function POST(request: NextRequest) {
       scrapeType = mode;
     }
 
-    // Create async job
-    const jobId = jobQueue.createJob();
-
-    // Start processing in background
-    jobQueue.startJob(jobId, async () => {
-      jobQueue.updateProgress(jobId, 'Starting analysis...', 5);
-
-      if (scrapeType === 'profile') {
-        jobQueue.updateProgress(jobId, 'Analyzing Instagram profile...', 10);
-        const result = await scrapeProfileAndPostsByUrl(
-          url,
-          20,
-          (message, percent) => jobQueue.updateProgress(jobId, message, percent)
-        );
-        jobQueue.updateProgress(jobId, 'Almost done...', 95);
-        
-        const response: ScrapeResponse = {
-          type: 'profile',
-          profile: result,
-        };
-        return response;
-      } else {
-        jobQueue.updateProgress(jobId, 'Analyzing Instagram post...', 20);
-        const result = await scrapePostCommentsByUrl(
-          url,
-          200,
-          (message, percent) => jobQueue.updateProgress(jobId, message, percent)
-        );
-        jobQueue.updateProgress(jobId, 'Almost done...', 95);
-        
-        const response: ScrapeResponse = {
-          type: 'post',
-          post: result,
-        };
-        return response;
-      }
-    });
-
-    // Return job ID immediately
-    return NextResponse.json({
-      jobId,
-      status: 'pending',
-      message: 'Scraping started. Poll /api/scrape/status/[jobId] for results.',
-    });
+    // Process synchronously with progress updates
+    // Note: In-memory job queue doesn't work across Lambda instances in Amplify
+    // So we'll process synchronously but with progress callbacks for UI updates
+    
+    if (scrapeType === 'profile') {
+      const result = await scrapeProfileAndPostsByUrl(
+        url,
+        20,
+        (message, percent) => {
+          // Progress updates are logged but can't be polled in serverless
+          console.log(`Progress: ${percent}% - ${message}`);
+        }
+      );
+      
+      const response: ScrapeResponse = {
+        type: 'profile',
+        profile: result,
+      };
+      return NextResponse.json(response);
+    } else {
+      const result = await scrapePostCommentsByUrl(
+        url,
+        200,
+        (message, percent) => {
+          console.log(`Progress: ${percent}% - ${message}`);
+        }
+      );
+      
+      const response: ScrapeResponse = {
+        type: 'post',
+        post: result,
+      };
+      return NextResponse.json(response);
+    }
   } catch (error: any) {
     console.error('API route error:', error);
     return NextResponse.json(

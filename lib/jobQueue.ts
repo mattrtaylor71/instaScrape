@@ -51,6 +51,20 @@ class JobQueue {
   }
 
   /**
+   * Get total number of jobs (for debugging)
+   */
+  getJobCount(): number {
+    return this.jobs.size;
+  }
+
+  /**
+   * List all job IDs (for debugging)
+   */
+  listJobIds(): string[] {
+    return Array.from(this.jobs.keys());
+  }
+
+  /**
    * Update job status
    */
   updateJob(jobId: string, updates: Partial<ScrapeJob>): void {

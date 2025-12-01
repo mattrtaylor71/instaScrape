@@ -8,6 +8,9 @@ export async function GET(
   try {
     const { jobId } = await params;
 
+    console.log(`[Status Check] Looking for job: ${jobId}`);
+    console.log(`[Status Check] Total jobs in queue: ${jobQueue.getJobCount?.() || 'unknown'}`);
+
     if (!jobId) {
       return NextResponse.json(
         { error: 'Job ID is required' },
@@ -18,11 +21,19 @@ export async function GET(
     const job = jobQueue.getJob(jobId);
 
     if (!job) {
+      console.log(`[Status Check] Job ${jobId} not found in queue`);
+      // Return a more informative error
       return NextResponse.json(
-        { error: 'Job not found' },
+        { 
+          error: 'Job not found',
+          message: 'The job may have expired or is being processed on a different server instance. This can happen with serverless deployments where each request may hit a different server.',
+          jobId 
+        },
         { status: 404 }
       );
     }
+
+    console.log(`[Status Check] Found job ${jobId} with status: ${job.status}`);
 
     // Return job status
     return NextResponse.json({
