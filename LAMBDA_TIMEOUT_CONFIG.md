@@ -3,27 +3,57 @@
 ## Problem
 Next.js API routes on AWS Amplify Hosting have platform-controlled timeouts (~30 seconds) that cause 504 Gateway Timeout errors for long-running operations like Instagram scraping.
 
-## Solution: Manual Lambda Timeout Configuration
+## Solution: Automated Lambda Timeout Configuration
 
-Since Amplify Hosting manages Lambda functions automatically, you need to manually configure the timeout after deployment:
+Since Amplify Hosting manages Lambda functions automatically, you need to configure the timeout after each deployment. We've provided automated scripts to make this easier:
 
-### Step 1: Find Your Lambda Functions
+### Automated Solution (Recommended)
+
+We've created scripts to automatically update Lambda timeouts after deployment:
+
+#### Option 1: Bash Script (Linux/Mac)
+
+```bash
+# Set your Amplify App ID (find it in AWS Amplify Console)
+export AMPLIFY_APP_ID=your-app-id-here
+export AMPLIFY_BRANCH=main  # Optional, defaults to 'main'
+
+# Make script executable
+chmod +x scripts/update-lambda-timeout.sh
+
+# Run the script
+./scripts/update-lambda-timeout.sh
+```
+
+#### Option 2: Node.js Script
+
+```bash
+# Install AWS SDK (if not already installed)
+npm install @aws-sdk/client-lambda
+
+# Set your Amplify App ID
+export AMPLIFY_APP_ID=your-app-id-here
+export AMPLIFY_BRANCH=main  # Optional
+
+# Run the script
+node scripts/update-lambda-timeout.js
+```
+
+#### Option 3: Manual Configuration (AWS Console)
+
+If you prefer to do it manually:
 
 1. Go to [AWS Lambda Console](https://console.aws.amazon.com/lambda/)
 2. Look for functions with names like:
    - `amplify-<app-id>-<branch>-<hash>-api-scrape-*`
    - `amplify-<app-id>-<branch>-<hash>-api-ask-*`
    - Functions containing "NextJS" or "SSR" in the name
-
-### Step 2: Increase Timeout
-
-For each Lambda function that handles API routes:
-
-1. Click on the function name
-2. Go to **Configuration** tab
-3. Click **General configuration** → **Edit**
-4. Set **Timeout** to **15 minutes** (900 seconds) - the maximum
-5. Click **Save**
+3. For each function:
+   - Click on the function name
+   - Go to **Configuration** tab
+   - Click **General configuration** → **Edit**
+   - Set **Timeout** to **15 minutes** (900 seconds) for scraping, 5 minutes (300 seconds) for AI
+   - Click **Save**
 
 ### Step 3: Prevent Amplify from Resetting
 

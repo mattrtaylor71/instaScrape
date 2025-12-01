@@ -1,0 +1,91 @@
+#!/usr/bin/env node
+
+/**
+ * Script to update Lambda function timeouts for AWS Amplify Next.js API routes
+ * 
+ * Usage:
+ *   node scripts/update-lambda-timeout.js
+ * 
+ * Requires:
+ *   - AWS CLI configured with appropriate permissions
+ *   - AMPLIFY_APP_ID environment variable set
+ *   - @aws-sdk/client-lambda package (install with: npm install @aws-sdk/client-lambda)
+ */
+
+const { LambdaClient, ListFunctionsCommand, UpdateFunctionConfigurationCommand } = require('@aws-sdk/client-lambda');
+
+const AMPLIFY_APP_ID = process.env.AMPLIFY_APP_ID;
+const BRANCH = process.env.AMPLIFY_BRANCH || 'main';
+
+if (!AMPLIFY_APP_ID) {
+  console.error('❌ Please set AMPLIFY_APP_ID environment variable');
+  console.error('You can find it in AWS Amplify Console → Your App → App settings → General');
+  process.exit(1);
+}
+
+const lambda = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
+
+async function updateLambdaTimeouts() {
+  console.log('🔧 Updating Lambda function timeouts for AWS Amplify...');
+  console.log(`App ID: ${AMPLIFY_APP_ID}`);
+  console.log(`Branch: ${BRANCH}\n`);
+
+  try {
+    // List all Lambda functions
+    const listCommand = new ListFunctionsCommand({});
+    const response = await lambda.send(listCommand);
+    
+    // Filter functions for this Amplify app
+    const functions = response.Functions.filter(fn => 
+      fn.FunctionName.includes(`amplify-${AMPLIFY_APP_ID}`) &&
+      fn.FunctionName.includes(BRANCH)
+    );
+
+    if (functions.length === 0) {
+      console.log('⚠️  No Lambda functions found for this Amplify app');
+      console.log('Make sure AWS credentials are configured correctly');
+      return;
+    }
+
+    console.log(`Found ${functions.length} Lambda function(s):\n`);
+
+    // Update each function
+    for (const func of functions) {
+      const functionName = func.FunctionName;
+      console.log(`Updating ${functionName}...`);
+
+      // Determine timeout based on function name
+      let timeout = 60; // Default 1 minute
+      if (functionName.includes('api-scrape') || functionName.includes('scrape')) {
+        timeout = 900; // 15 minutes for scraping
+        console.log('  Setting timeout to 900 seconds (15 minutes) for scraping function');
+      } else if (functionName.includes('api-ask') || functionName.includes('ask')) {
+        timeout = 300; // 5 minutes for AI requests
+        console.log('  Setting timeout to 300 seconds (5 minutes) for AI function');
+      } else {
+        console.log('  Setting timeout to 60 seconds (default) for other functions');
+      }
+
+      try {
+        const updateCommand = new UpdateFunctionConfigurationCommand({
+          FunctionName: functionName,
+          Timeout: timeout,
+        });
+        await lambda.send(updateCommand);
+        console.log(`  ✅ Successfully updated ${functionName} timeout to ${timeout} seconds\n`);
+      } catch (error) {
+        console.error(`  ❌ Failed to update ${functionName}:`, error.message);
+      }
+    }
+
+    console.log('✨ Lambda timeout update complete!');
+    console.log('\nNote: Amplify may reset these settings on the next deployment.');
+    console.log('Consider running this script after each deployment, or set up a CI/CD step.');
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    process.exit(1);
+  }
+}
+
+updateLambdaTimeouts();
+
