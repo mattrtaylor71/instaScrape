@@ -216,11 +216,32 @@ provider:
 - Redeploy after adding variables
 
 ### Timeout Issues (Lambda)
+
+#### For Next.js SSR on AWS Amplify Hosting
+- **Problem**: Next.js SSR routes on Amplify Hosting have platform-controlled timeouts (~30 seconds) that cannot be easily increased.
+- **Workarounds**:
+  1. **Reduce scraping scope**: The app defaults to 10 posts instead of 20
+  2. **Create separate Lambda function**: Move heavy scraping to a standalone Lambda (not SSR route) with configurable timeout
+  3. **Implement async pattern**: Return job ID immediately, process in background, poll for results
+
+#### For Serverless Framework deployments
 - Increase timeout in `serverless.yml`:
   ```yaml
   provider:
-    timeout: 60  # seconds
+    timeout: 60  # seconds (up to 900 for Lambda)
   ```
+
+#### For Amplify Gen 2 functions
+- Set timeout in `amplify/functions/<name>/resource.ts`:
+  ```ts
+  export const myFunction = defineFunction({
+    timeoutSeconds: 60, // 1-900 seconds
+  });
+  ```
+
+#### For Amplify Gen 1 functions
+- Run `amplify update function` and set timeout when prompted
+- Or set `_BUILD_TIMEOUT` environment variable for build timeouts (5-120 minutes)
 
 ### CORS Issues
 - Already configured in `serverless.yml`

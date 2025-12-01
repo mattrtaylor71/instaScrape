@@ -136,13 +136,18 @@ The application includes comments in the codebase reminding developers of these 
 - Some Apify Actors may require additional configuration or have usage limits
 
 ### 504 Gateway Timeout Error
-- **Cause**: AWS Lambda has a default timeout (usually 30 seconds). Instagram scraping can take several minutes.
-- **Solution**: Increase Lambda timeout in AWS Amplify Console:
-  1. Go to AWS Amplify Console → Your App → App settings → Build settings
-  2. Edit the build settings
-  3. Under "Lambda timeout", increase to maximum (900 seconds / 15 minutes)
-  4. Save and redeploy
-- **Alternative**: The app now defaults to scraping only 10 posts (instead of 20) to reduce scraping time
+- **Cause**: For Next.js SSR apps on AWS Amplify Hosting, the Lambda timeout is **platform-controlled** and cannot be easily increased (typically limited to ~30 seconds). Instagram scraping can take several minutes.
+- **Current Workaround**: The app defaults to scraping only 10 posts (instead of 20) to reduce scraping time.
+- **Long-term Solutions**:
+  1. **Move scraping to a separate Lambda function** (not an SSR route) where you control the timeout:
+     - Create a standalone Lambda function with up to 15-minute timeout
+     - Call it from your Next.js app via API Gateway
+  2. **Implement async processing**:
+     - Return immediately with a job ID
+     - Process scraping in background
+     - Client polls for results
+  3. **Use AWS Step Functions or SQS** for long-running tasks
+- **Note**: Manually changing Lambda timeout in AWS Console will be reset by Amplify on next deploy. For Next.js SSR routes, timeouts are managed by the platform.
 
 ### AI answers are slow
 - The OpenAI model used is `gpt-4o-mini` (cost-effective). You can change it in `lib/ai.ts` to `gpt-4` for potentially better results (but higher cost)
