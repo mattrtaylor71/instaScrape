@@ -2,10 +2,10 @@ import { getApifyClient } from './apifyClient';
 
 /**
  * Get Apify account remaining credits.
- * Credits = (maxMonthlyUsageUsd - monthlyUsageUsd) * 10, without dollar sign.
+ * Credits = (maxMonthlyUsageUsd - monthlyUsageUsd) * 100, without dollar sign.
  * This represents remaining credits available for the current billing cycle.
  * 
- * Example: $39 max - $2.99 used = $36.01 remaining = 360 credits
+ * Example: $39 max - $2.99 used = $36.01 remaining = 3601 credits
  */
 // Store last API response for debugging
 let lastApiResponse: any = null;
@@ -119,11 +119,11 @@ export async function getApifyCredits(): Promise<number> {
     console.log('Remaining (USD):', remainingUsd);
     console.log('Remaining calculation: maxUsage (', maxUsage, ') - currentUsage (', currentUsage, ') =', remainingUsd);
     
-    // Step 7: Convert to credits (multiply by 10, not 100)
-    console.log('Step 7: Converting to credits (multiply by 10)...');
-    const credits = Math.floor(remainingUsd * 10);
+    // Step 7: Convert to credits (multiply by 100)
+    console.log('Step 7: Converting to credits (multiply by 100)...');
+    const credits = Math.floor(remainingUsd * 100);
     console.log('Final calculated credits:', credits);
-    console.log('Credits calculation: remainingUsd (', remainingUsd, ') * 10 =', credits);
+    console.log('Credits calculation: remainingUsd (', remainingUsd, ') * 100 =', credits);
     
     console.log('=== SUCCESS: getApifyCredits completed ===');
     return credits;
