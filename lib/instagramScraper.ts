@@ -56,7 +56,7 @@ function extractUsername(url: string): string {
  */
 export async function scrapeProfileAndPostsByUrl(
   url: string,
-  postsLimit: number = 10  // Reduced from 20 to 10 to avoid Lambda timeouts
+  postsLimit: number = 20  // Restored to 20 since we're not fetching comments automatically anymore
 ): Promise<ScrapedProfileResult> {
   const client = getApifyClient();
   const username = extractUsername(url);
