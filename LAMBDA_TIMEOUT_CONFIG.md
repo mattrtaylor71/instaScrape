@@ -3,7 +3,21 @@
 ## Problem
 Next.js API routes on AWS Amplify Hosting have platform-controlled timeouts (~30 seconds) that cause 504 Gateway Timeout errors for long-running operations like Instagram scraping.
 
-## Solution: Automated Lambda Timeout Configuration
+## Quick Fix: Automatic Configuration
+
+The `amplify.yml` file has been configured to automatically update Lambda timeouts after each build. To enable this:
+
+1. **Set Environment Variable in Amplify Console**:
+   - Go to AWS Amplify Console → Your App → App settings → Environment variables
+   - Add: `AMPLIFY_APP_ID` = `your-app-id` (find it in App settings → General)
+   - Save and redeploy
+
+2. **The script will run automatically** after each deployment and update Lambda timeouts:
+   - Scraping functions: 900 seconds (15 minutes)
+   - AI functions: 300 seconds (5 minutes)
+   - Other functions: 60 seconds (1 minute)
+
+## Manual Solution: Automated Lambda Timeout Configuration
 
 Since Amplify Hosting manages Lambda functions automatically, you need to configure the timeout after each deployment. We've provided automated scripts to make this easier:
 
