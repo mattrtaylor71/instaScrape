@@ -56,7 +56,7 @@ function extractUsername(url: string): string {
  */
 export async function scrapeProfileAndPostsByUrl(
   url: string,
-  postsLimit: number = 20  // Restored to 20 since we're not fetching comments automatically anymore
+  postsLimit: number = 20  // Restored to 20 with async processing
 ): Promise<ScrapedProfileResult> {
   const client = getApifyClient();
   const username = extractUsername(url);
@@ -246,7 +246,7 @@ export async function scrapeProfileAndPostsByUrl(
  */
 export async function scrapePostCommentsByUrl(
   url: string,
-  commentsLimit: number = 200
+  commentsLimit: number = 200  // Restored to 200 with async processing
 ): Promise<ScrapedCommentsResult> {
   const client = getApifyClient();
 

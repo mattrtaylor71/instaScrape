@@ -19,6 +19,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.940.0",
     "@aws-sdk/client-lambda": "^3.942.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",

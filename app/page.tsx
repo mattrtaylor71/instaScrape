@@ -138,9 +138,10 @@ export default function Home() {
     localStorage.setItem('hasAccess', 'true');
   };
 
-  // Simulate loading progress during scraping
+  // Simulate loading progress during scraping (fallback if no real progress)
   useEffect(() => {
-    if (isScraping) {
+    if (isScraping && loadingProgress === 0) {
+      // Only simulate if we don't have real progress yet
       const messages = [
         'Connecting to Instagram...',
         'Analyzing profile structure...',
@@ -154,23 +155,26 @@ export default function Home() {
       let messageIndex = 0;
       
       const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90; // Cap at 90% until actually done
+        // Stop simulating if we get real progress
+        if (loadingProgress > 0) {
+          clearInterval(interval);
+          return;
+        }
         
-        if (progress > (messageIndex + 1) * 15 && messageIndex < messages.length - 1) {
+        progress += Math.random() * 10;
+        if (progress > 50) progress = 50; // Cap at 50% until real progress comes
+        
+        if (progress > (messageIndex + 1) * 8 && messageIndex < messages.length - 1) {
           messageIndex++;
           setLoadingMessage(messages[messageIndex]);
         }
         
         setLoadingProgress(progress);
-      }, 800);
+      }, 1000);
 
       return () => clearInterval(interval);
-    } else {
-      setLoadingProgress(0);
-      setLoadingMessage('Initializing...');
     }
-  }, [isScraping]);
+  }, [isScraping, loadingProgress]);
 
   const handleScrape = async () => {
     if (!url.trim()) {
@@ -188,6 +192,7 @@ export default function Home() {
     setLoadingMessage('Initializing...');
 
     try {
+      // Start the scrape job
       const response = await fetch('/api/scrape', {
         method: 'POST',
         headers: {
@@ -196,45 +201,60 @@ export default function Home() {
         body: JSON.stringify({ url: url.trim(), mode }),
       });
 
-      // Handle timeout errors before trying to parse JSON
-      if (response.status === 504) {
-        throw new Error(
-          'Scraping timed out. Instagram scraping can take several minutes. ' +
-          'The request may still be processing on the server. Please wait a moment and try again, ' +
-          'or try with a profile that has fewer posts.'
-        );
-      }
-
-      // Try to parse JSON, but handle empty responses
-      let data;
-      try {
-        const text = await response.text();
-        if (!text) {
-          throw new Error('Empty response from server');
-        }
-        data = JSON.parse(text);
-      } catch (parseError: any) {
-        if (response.status >= 500) {
-          throw new Error(
-            'Server error occurred. The scraping may still be processing. ' +
-            'Please wait a moment and try again.'
-          );
-        }
-        throw new Error('Failed to parse server response');
-      }
-
       if (!response.ok) {
-        throw new Error(data?.error || `Failed to scrape (${response.status})`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error || `Failed to start scrape (${response.status})`);
       }
 
-      setLoadingProgress(100);
-      setLoadingMessage('Complete!');
-      setTimeout(() => {
-        setScrapedData(data);
-        setIsScraping(false);
-        // Update credits after scraping
-        fetchCredits();
-      }, 500);
+      const { jobId } = await response.json();
+
+      if (!jobId) {
+        throw new Error('No job ID returned from server');
+      }
+
+      // Poll for job status
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusResponse = await fetch(`/api/scrape/status/${jobId}`);
+          
+          if (!statusResponse.ok) {
+            throw new Error('Failed to check job status');
+          }
+
+          const statusData = await statusResponse.json();
+
+          // Update progress
+          if (statusData.progress) {
+            setLoadingMessage(statusData.progress.message || 'Processing...');
+            if (statusData.progress.percent !== undefined) {
+              setLoadingProgress(statusData.progress.percent);
+            }
+          }
+
+          // Check if job is complete
+          if (statusData.status === 'completed') {
+            clearInterval(pollInterval);
+            setLoadingProgress(100);
+            setLoadingMessage('Complete!');
+            setTimeout(() => {
+              setScrapedData(statusData.result);
+              setIsScraping(false);
+              fetchCredits();
+            }, 500);
+          } else if (statusData.status === 'failed') {
+            clearInterval(pollInterval);
+            setScrapeError(statusData.error || 'Scraping failed');
+            setIsScraping(false);
+          }
+          // If still processing, continue polling
+        } catch (error: any) {
+          console.error('Polling error:', error);
+          // Don't stop polling on network errors, just log
+        }
+      }, 2000); // Poll every 2 seconds
+
+      // Cleanup interval if component unmounts
+      return () => clearInterval(pollInterval);
     } catch (error: any) {
       setScrapeError(error.message || 'An error occurred while scraping');
       setIsScraping(false);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scrapeProfileAndPostsByUrl, scrapePostCommentsByUrl } from '@/lib/instagramScraper';
+import { jobQueue } from '@/lib/jobQueue';
 import type { ScrapeRequest, ScrapeResponse } from '@/types/instagram';
 
 function parseInstagramUrl(url: string): 'profile' | 'post' {
@@ -57,69 +58,42 @@ export async function POST(request: NextRequest) {
       scrapeType = mode;
     }
 
-    // Perform scraping with timeout handling
-    if (scrapeType === 'profile') {
-      try {
+    // Create async job
+    const jobId = jobQueue.createJob();
+
+    // Start processing in background
+    jobQueue.startJob(jobId, async () => {
+      jobQueue.updateProgress(jobId, 'Initializing scrape...', 5);
+
+      if (scrapeType === 'profile') {
+        jobQueue.updateProgress(jobId, 'Scraping profile data...', 10);
         const result = await scrapeProfileAndPostsByUrl(url);
+        jobQueue.updateProgress(jobId, 'Processing posts...', 80);
+        
         const response: ScrapeResponse = {
           type: 'profile',
           profile: result,
         };
-        return NextResponse.json(response);
-      } catch (error: any) {
-        console.error('Profile scrape error:', error);
-        
-        // Check if it's a timeout error
-        if (error.message?.includes('timeout') || error.message?.includes('504')) {
-          return NextResponse.json(
-            {
-              error: 'Scraping timed out. This can happen with large profiles. Try a smaller profile or increase Lambda timeout in AWS Amplify Console.',
-              details: 'The scraping operation took too long. AWS Lambda has a default timeout that may need to be increased.',
-            },
-            { status: 504 }
-          );
-        }
-        
-        return NextResponse.json(
-          {
-            error: error.message || 'Failed to scrape profile',
-            details: error.toString(),
-          },
-          { status: 500 }
-        );
-      }
-    } else {
-      // Post scraping
-      try {
+        return response;
+      } else {
+        jobQueue.updateProgress(jobId, 'Scraping post data...', 20);
         const result = await scrapePostCommentsByUrl(url);
+        jobQueue.updateProgress(jobId, 'Processing comments...', 80);
+        
         const response: ScrapeResponse = {
           type: 'post',
           post: result,
         };
-        return NextResponse.json(response);
-      } catch (error: any) {
-        console.error('Post scrape error:', error);
-        
-        // Check if it's a timeout error
-        if (error.message?.includes('timeout') || error.message?.includes('504')) {
-          return NextResponse.json(
-            {
-              error: 'Scraping timed out. This can happen with posts that have many comments. Try increasing Lambda timeout in AWS Amplify Console.',
-              details: 'The scraping operation took too long. AWS Lambda has a default timeout that may need to be increased.',
-            },
-            { status: 504 }
-          );
-        }
-        
-        return NextResponse.json(
-          {
-            error: error.message || 'Failed to scrape post',
-            details: error.toString(),
-          },
-          { status: 500 }
-        );
+        return response;
       }
-    }
+    });
+
+    // Return job ID immediately
+    return NextResponse.json({
+      jobId,
+      status: 'pending',
+      message: 'Scraping started. Poll /api/scrape/status/[jobId] for results.',
+    });
   } catch (error: any) {
     console.error('API route error:', error);
     return NextResponse.json(
