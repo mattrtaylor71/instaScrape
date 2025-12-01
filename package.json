@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "deploy:amplify": "amplify publish",
-    "deploy:serverless": "serverless deploy"
+    "deploy:serverless": "serverless deploy",
+    "postbuild": "node scripts/update-lambda-timeout.js || echo 'Lambda timeout update skipped'"
   },
   "dependencies": {
     "apify-client": "^2.8.2",
@@ -18,6 +19,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-lambda": "^3.942.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
@@ -27,4 +29,3 @@
     "typescript": "^5.3.0"
   }
 }
-

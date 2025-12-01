@@ -17,10 +17,9 @@ const { LambdaClient, ListFunctionsCommand, UpdateFunctionConfigurationCommand }
 const AMPLIFY_APP_ID = process.env.AMPLIFY_APP_ID;
 const BRANCH = process.env.AMPLIFY_BRANCH || 'main';
 
-if (!AMPLIFY_APP_ID) {
-  console.error('❌ Please set AMPLIFY_APP_ID environment variable');
-  console.error('You can find it in AWS Amplify Console → Your App → App settings → General');
-  process.exit(1);
+// App ID is now set to default, but log if using default
+if (AMPLIFY_APP_ID === 'd21qzkz6ya2vb7' && !process.env.AMPLIFY_APP_ID) {
+  console.log('ℹ️  Using default AMPLIFY_APP_ID. Set AMPLIFY_APP_ID env var to override.');
 }
 
 const lambda = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
@@ -35,11 +34,13 @@ async function updateLambdaTimeouts() {
     const listCommand = new ListFunctionsCommand({});
     const response = await lambda.send(listCommand);
     
-    // Filter functions for this Amplify app
-    const functions = response.Functions.filter(fn => 
-      fn.FunctionName.includes(`amplify-${AMPLIFY_APP_ID}`) &&
-      fn.FunctionName.includes(BRANCH)
-    );
+    // Filter functions for this Amplify app - be more flexible with matching
+    const functions = response.Functions.filter(fn => {
+      const name = fn.FunctionName.toLowerCase();
+      return (name.includes('amplify') && name.includes(AMPLIFY_APP_ID.toLowerCase())) ||
+             (name.includes('nextjs') && name.includes('api')) ||
+             (name.includes('ssr') && name.includes('api'));
+    });
 
     if (functions.length === 0) {
       console.log('⚠️  No Lambda functions found for this Amplify app');
