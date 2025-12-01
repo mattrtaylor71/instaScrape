@@ -34,37 +34,58 @@ async function updateLambdaTimeouts() {
     const listCommand = new ListFunctionsCommand({});
     const response = await lambda.send(listCommand);
     
-    // Filter functions for this Amplify app - be more flexible with matching
+    // Filter functions for this Amplify app - be very flexible with matching
+    // Next.js API routes on Amplify can have various naming patterns
     const functions = response.Functions.filter(fn => {
       const name = fn.FunctionName.toLowerCase();
-      return (name.includes('amplify') && name.includes(AMPLIFY_APP_ID.toLowerCase())) ||
-             (name.includes('nextjs') && name.includes('api')) ||
-             (name.includes('ssr') && name.includes('api'));
+      // Match any function that could be a Next.js API route
+      return name.includes('amplify') ||
+             (name.includes('nextjs') || name.includes('next-js')) ||
+             (name.includes('ssr') && (name.includes('api') || name.includes('route'))) ||
+             (name.includes('api') && (name.includes('scrape') || name.includes('ask') || name.includes('credits'))) ||
+             name.includes(AMPLIFY_APP_ID.toLowerCase());
     });
+    
+    // If we found too many, try to narrow down by app ID
+    let filteredFunctions = functions;
+    if (functions.length > 20) {
+      filteredFunctions = functions.filter(fn => 
+        fn.FunctionName.toLowerCase().includes(AMPLIFY_APP_ID.toLowerCase())
+      );
+    }
 
-    if (functions.length === 0) {
+    if (filteredFunctions.length === 0) {
       console.log('⚠️  No Lambda functions found for this Amplify app');
+      console.log(`Searched ${response.Functions.length} total functions`);
       console.log('Make sure AWS credentials are configured correctly');
       return;
     }
 
-    console.log(`Found ${functions.length} Lambda function(s):\n`);
+    console.log(`Found ${filteredFunctions.length} Lambda function(s) (out of ${response.Functions.length} total):\n`);
 
     // Update each function
-    for (const func of functions) {
+    for (const func of filteredFunctions) {
       const functionName = func.FunctionName;
       console.log(`Updating ${functionName}...`);
 
       // Determine timeout based on function name
-      let timeout = 60; // Default 1 minute
-      if (functionName.includes('api-scrape') || functionName.includes('scrape')) {
+      // For Next.js API routes, we want to set high timeouts for all of them
+      let timeout = 900; // Default to 15 minutes (maximum) for all API routes
+      
+      const nameLower = functionName.toLowerCase();
+      if (nameLower.includes('scrape') || nameLower.includes('/api/scrape')) {
         timeout = 900; // 15 minutes for scraping
         console.log('  Setting timeout to 900 seconds (15 minutes) for scraping function');
-      } else if (functionName.includes('api-ask') || functionName.includes('ask')) {
+      } else if (nameLower.includes('ask') || nameLower.includes('/api/ask')) {
         timeout = 300; // 5 minutes for AI requests
         console.log('  Setting timeout to 300 seconds (5 minutes) for AI function');
+      } else if (nameLower.includes('api') || nameLower.includes('route') || nameLower.includes('ssr')) {
+        // Any API route gets 15 minutes to be safe
+        timeout = 900;
+        console.log('  Setting timeout to 900 seconds (15 minutes) for API route');
       } else {
-        console.log('  Setting timeout to 60 seconds (default) for other functions');
+        timeout = 900; // Default to max for any Amplify function
+        console.log('  Setting timeout to 900 seconds (15 minutes) for other functions');
       }
 
       try {
