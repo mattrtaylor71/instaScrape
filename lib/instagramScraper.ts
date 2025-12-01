@@ -56,7 +56,8 @@ function extractUsername(url: string): string {
  */
 export async function scrapeProfileAndPostsByUrl(
   url: string,
-  postsLimit: number = 20  // Restored to 20 with async processing
+  postsLimit: number = 20,  // Restored to 20 with async processing
+  onProgress?: (message: string, percent?: number) => void
 ): Promise<ScrapedProfileResult> {
   const client = getApifyClient();
   const username = extractUsername(url);
@@ -76,9 +77,13 @@ export async function scrapeProfileAndPostsByUrl(
       // startUrls: [{ url: `https://www.instagram.com/${username}/` }],
     };
 
+    onProgress?.('Starting Apify scraper...', 15);
     console.log(`Starting Apify Actor ${actorId} for profile: ${username}`);
+    
+    onProgress?.('Calling Apify API (this may take a few minutes)...', 20);
     const run = await client.actor(actorId).call(input);
 
+    onProgress?.('Fetching scraped data...', 40);
     // Get results from the default dataset
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
@@ -188,11 +193,13 @@ export async function scrapeProfileAndPostsByUrl(
       });
 
     console.log(`Extracted ${posts.length} posts from ${items.length} total items`);
+    onProgress?.(`Found ${posts.length} posts. Fetching comments...`, 50);
 
     // Fetch additional comments for posts that don't have them yet
     console.log('Fetching additional comments for posts without comments...');
+    let processedCount = 0;
     const postsWithComments = await Promise.all(
-      posts.map(async (post) => {
+      posts.map(async (post, index) => {
         // If post already has comments, return it as-is
         if (post.comments && post.comments.length > 0) {
           console.log(`Post ${post.id} already has ${post.comments.length} comments, skipping fetch`);
@@ -213,7 +220,11 @@ export async function scrapeProfileAndPostsByUrl(
           }
 
           console.log(`Fetching comments for post: ${post.url}`);
+          onProgress?.(`Fetching comments for post ${index + 1}/${posts.length}...`, 50 + (index / posts.length) * 30);
           const commentsResult = await scrapePostCommentsByUrl(post.url, 200);
+          
+          processedCount++;
+          onProgress?.(`Processed ${processedCount}/${posts.length} posts...`, 50 + (processedCount / posts.length) * 30);
           
           return {
             ...post,
@@ -227,6 +238,7 @@ export async function scrapeProfileAndPostsByUrl(
       })
     );
 
+    onProgress?.('Finalizing results...', 95);
     return { profile, posts: postsWithComments };
   } catch (error: any) {
     console.error('Error scraping Instagram profile:', error);
@@ -246,7 +258,8 @@ export async function scrapeProfileAndPostsByUrl(
  */
 export async function scrapePostCommentsByUrl(
   url: string,
-  commentsLimit: number = 200  // Restored to 200 with async processing
+  commentsLimit: number = 200,  // Restored to 200 with async processing
+  onProgress?: (message: string, percent?: number) => void
 ): Promise<ScrapedCommentsResult> {
   const client = getApifyClient();
 
@@ -261,9 +274,13 @@ export async function scrapePostCommentsByUrl(
       resultsLimit: commentsLimit,
     };
 
+    onProgress?.('Starting comment scraper...', 30);
     console.log(`Starting Apify Actor ${actorId} for post: ${url}`);
+    
+    onProgress?.('Calling Apify API for comments...', 40);
     const run = await client.actor(actorId).call(input);
 
+    onProgress?.('Fetching comment data...', 60);
     // Get results from the default dataset
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
@@ -291,6 +308,7 @@ export async function scrapePostCommentsByUrl(
         }
       : undefined;
 
+    onProgress?.('Processing comments...', 80);
     // Extract comments
     // According to Apify docs: https://apify.com/apify/instagram-comment-scraper
     // Output fields: id, postId, text, position, timestamp, ownerId, ownerIsVerified, ownerUsername, ownerProfilePicUrl
@@ -316,6 +334,7 @@ export async function scrapePostCommentsByUrl(
         })),
       }));
 
+    onProgress?.(`Found ${comments.length} comments`, 95);
     return {
       postUrl: url,
       post,

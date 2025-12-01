@@ -67,8 +67,12 @@ export async function POST(request: NextRequest) {
 
       if (scrapeType === 'profile') {
         jobQueue.updateProgress(jobId, 'Scraping profile data...', 10);
-        const result = await scrapeProfileAndPostsByUrl(url);
-        jobQueue.updateProgress(jobId, 'Processing posts...', 80);
+        const result = await scrapeProfileAndPostsByUrl(
+          url,
+          20,
+          (message, percent) => jobQueue.updateProgress(jobId, message, percent)
+        );
+        jobQueue.updateProgress(jobId, 'Finalizing...', 95);
         
         const response: ScrapeResponse = {
           type: 'profile',
@@ -77,8 +81,12 @@ export async function POST(request: NextRequest) {
         return response;
       } else {
         jobQueue.updateProgress(jobId, 'Scraping post data...', 20);
-        const result = await scrapePostCommentsByUrl(url);
-        jobQueue.updateProgress(jobId, 'Processing comments...', 80);
+        const result = await scrapePostCommentsByUrl(
+          url,
+          200,
+          (message, percent) => jobQueue.updateProgress(jobId, message, percent)
+        );
+        jobQueue.updateProgress(jobId, 'Finalizing...', 95);
         
         const response: ScrapeResponse = {
           type: 'post',
