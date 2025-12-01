@@ -12,6 +12,7 @@
     "postbuild": "node scripts/update-lambda-timeout.js || echo 'Lambda timeout update skipped'"
   },
   "dependencies": {
+    "@aws-sdk/client-lambda": "^3.942.0",
     "apify-client": "^2.8.2",
     "next": "^15.0.0",
     "openai": "^4.20.0",
@@ -20,7 +21,6 @@
   },
   "devDependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.940.0",
-    "@aws-sdk/client-lambda": "^3.942.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

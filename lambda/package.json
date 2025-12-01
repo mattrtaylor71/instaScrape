@@ -1,0 +1,10 @@
+{
+  "name": "instagram-scrape-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function for Instagram scraping",
+  "main": "scrape-handler.js",
+  "dependencies": {
+    "apify-client": "^2.8.2"
+  }
+}
+

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { scrapeProfileAndPostsByUrl, scrapePostCommentsByUrl } from '@/lib/instagramScraper';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import type { ScrapeRequest, ScrapeResponse } from '@/types/instagram';
 
 function parseInstagramUrl(url: string): 'profile' | 'post' {
@@ -57,39 +57,60 @@ export async function POST(request: NextRequest) {
       scrapeType = mode;
     }
 
-    // Process synchronously with progress updates
-    // Note: In-memory job queue doesn't work across Lambda instances in Amplify
-    // So we'll process synchronously but with progress callbacks for UI updates
-    
-    if (scrapeType === 'profile') {
-      const result = await scrapeProfileAndPostsByUrl(
-        url,
-        5,  // Only 5 posts
-        (message, percent) => {
-          // Progress updates are logged but can't be polled in serverless
-          console.log(`Progress: ${percent}% - ${message}`);
-        }
-      );
+    // Invoke Lambda function for scraping (15-minute timeout)
+    const lambdaFunctionName = process.env.SCRAPE_LAMBDA_FUNCTION_NAME || 'instagram-scrape-lambda-dev-scrape';
+    const lambdaRegion = process.env.AWS_REGION || 'us-east-1';
+
+    try {
+      const lambdaClient = new LambdaClient({ region: lambdaRegion });
       
-      const response: ScrapeResponse = {
-        type: 'profile',
-        profile: result,
-      };
-      return NextResponse.json(response);
-    } else {
-      const result = await scrapePostCommentsByUrl(
-        url,
-        200,
-        (message, percent) => {
-          console.log(`Progress: ${percent}% - ${message}`);
-        }
-      );
+      const invokeCommand = new InvokeCommand({
+        FunctionName: lambdaFunctionName,
+        InvocationType: 'RequestResponse', // Synchronous invocation
+        Payload: JSON.stringify({
+          body: JSON.stringify({ url, mode }),
+        }),
+      });
+
+      console.log(`Invoking Lambda function: ${lambdaFunctionName} in region: ${lambdaRegion}`);
+      const lambdaResponse = await lambdaClient.send(invokeCommand);
+
+      if (!lambdaResponse.Payload) {
+        throw new Error('No response from Lambda function');
+      }
+
+      const responseText = new TextDecoder().decode(lambdaResponse.Payload);
+      const lambdaResult = JSON.parse(responseText);
+
+      if (lambdaResult.statusCode !== 200) {
+        const errorBody = JSON.parse(lambdaResult.body || '{}');
+        throw new Error(errorBody.error || 'Lambda function returned an error');
+      }
+
+      const result = JSON.parse(lambdaResult.body);
+      return NextResponse.json(result);
+    } catch (error: any) {
+      console.error('Lambda invocation error:', error);
       
-      const response: ScrapeResponse = {
-        type: 'post',
-        post: result,
-      };
-      return NextResponse.json(response);
+      // Fallback: If Lambda isn't configured, return helpful error
+      if (error.name === 'ResourceNotFoundException' || error.message?.includes('Function not found')) {
+        return NextResponse.json(
+          {
+            error: 'Lambda function not configured',
+            message: 'Please deploy the Lambda function first. See lambda/README.md for instructions.',
+            details: `Function name: ${lambdaFunctionName}, Region: ${lambdaRegion}`,
+          },
+          { status: 503 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          error: error.message || 'Failed to invoke Lambda function',
+          details: error.toString(),
+        },
+        { status: 500 }
+      );
     }
   } catch (error: any) {
     console.error('API route error:', error);

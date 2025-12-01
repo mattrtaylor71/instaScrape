@@ -1,0 +1,28 @@
+service: instagram-scrape-lambda
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  timeout: 900  # 15 minutes (max)
+  memorySize: 1024
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    APIFY_TOKEN: ${env:APIFY_TOKEN}
+  iam:
+    role:
+      statements: []
+
+functions:
+  scrape:
+    handler: scrape-handler.handler
+    timeout: 900  # 15 minutes
+    memorySize: 1024
+    events:
+      - http:
+          path: scrape
+          method: post
+          cors: true
+
+plugins:
+  - serverless-offline
+
