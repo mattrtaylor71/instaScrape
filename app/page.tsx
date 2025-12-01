@@ -292,6 +292,16 @@ export default function Home() {
     }
   };
 
+  // Helper function to proxy Instagram images through our API to bypass CORS
+  const getProxiedImageUrl = (url: string | undefined): string | undefined => {
+    if (!url) return undefined;
+    // Only proxy Instagram CDN URLs
+    if (url.includes('cdninstagram.com') || url.includes('instagram.com')) {
+      return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
   // Show access gate if no access
   if (!hasAccess) {
     return <AccessGate onAccessGranted={handleAccessGranted} />;
@@ -441,9 +451,16 @@ export default function Home() {
                   <div className="flex items-start gap-6">
                     {scrapedData.profile.profile.profilePicUrl && (
                       <img
-                        src={scrapedData.profile.profile.profilePicUrl}
+                        src={getProxiedImageUrl(scrapedData.profile.profile.profilePicUrl)}
                         alt={scrapedData.profile.profile.username}
                         className="w-24 h-24 rounded-full border-4 border-purple-300 shadow-lg"
+                        onError={(e) => {
+                          // Fallback to original URL if proxy fails
+                          const target = e.target as HTMLImageElement;
+                          if (target.src !== scrapedData.profile.profile.profilePicUrl) {
+                            target.src = scrapedData.profile.profile.profilePicUrl || '';
+                          }
+                        }}
                       />
                     )}
                     <div className="flex-1">
@@ -495,9 +512,16 @@ export default function Home() {
                         >
                           {post.imageUrl && (
                             <img
-                              src={post.imageUrl}
+                              src={getProxiedImageUrl(post.imageUrl)}
                               alt="Post"
                               className="w-full max-w-md rounded-lg mb-3 shadow-md"
+                              onError={(e) => {
+                                // Fallback to original URL if proxy fails
+                                const target = e.target as HTMLImageElement;
+                                if (target.src !== post.imageUrl) {
+                                  target.src = post.imageUrl || '';
+                                }
+                              }}
                             />
                           )}
                           {post.caption && (
@@ -582,9 +606,16 @@ export default function Home() {
                     <h3 className="text-2xl font-bold mb-3">Post</h3>
                     {scrapedData.post.post.imageUrl && (
                       <img
-                        src={scrapedData.post.post.imageUrl}
+                        src={getProxiedImageUrl(scrapedData.post.post.imageUrl)}
                         alt="Post"
                         className="w-full max-w-md rounded-lg mb-3 shadow-md"
+                        onError={(e) => {
+                          // Fallback to original URL if proxy fails
+                          const target = e.target as HTMLImageElement;
+                          if (target.src !== scrapedData.post.post.imageUrl) {
+                            target.src = scrapedData.post.post.imageUrl || '';
+                          }
+                        }}
                       />
                     )}
                     {scrapedData.post.post.caption && (
