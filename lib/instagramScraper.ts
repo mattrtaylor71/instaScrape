@@ -221,7 +221,7 @@ export async function scrapeProfileAndPostsByUrl(
 
           console.log(`Fetching comments for post: ${post.url}`);
           onProgress?.(`Fetching comments for post ${index + 1}/${posts.length}...`, 50 + (index / posts.length) * 30);
-          const commentsResult = await scrapePostCommentsByUrl(post.url, 200);
+          const commentsResult = await scrapePostCommentsByUrl(post.url, 200, onProgress);
           
           processedCount++;
           onProgress?.(`Processed ${processedCount}/${posts.length} posts...`, 50 + (processedCount / posts.length) * 30);
