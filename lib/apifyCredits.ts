@@ -5,6 +5,9 @@ import { getApifyClient } from './apifyClient';
  * Credits = (maxMonthlyUsageUsd - currentUsageUsd) * 100, without dollar sign.
  * This represents remaining credits available for the current billing cycle.
  */
+// Store last API response for debugging
+let lastApiResponse: any = null;
+
 export async function getApifyCredits(): Promise<number> {
   console.log('=== STARTING getApifyCredits ===');
   
@@ -62,6 +65,9 @@ export async function getApifyCredits(): Promise<number> {
       throw new Error(`Failed to parse API response: ${parseError.message}`);
     }
     
+    // Store for debugging
+    lastApiResponse = limits;
+    
     console.log('Parsed limits object:', JSON.stringify(limits, null, 2));
     console.log('Limits object keys:', Object.keys(limits));
     console.log('Limits object type:', typeof limits);
@@ -116,9 +122,6 @@ export async function getApifyCredits(): Promise<number> {
     console.log('Credits calculation: remainingUsd (', remainingUsd, ') * 100 =', credits);
     
     console.log('=== SUCCESS: getApifyCredits completed ===');
-    
-    // Return credits with debug info for troubleshooting
-    // Store debug info in a global or return it somehow
     return credits;
   } catch (error: any) {
     console.error('=== ERROR in getApifyCredits ===');
@@ -132,6 +135,12 @@ export async function getApifyCredits(): Promise<number> {
     
     // Return 0 if we can't fetch
     console.error('Returning 0 credits due to error');
+    lastApiResponse = { error: error.message };
     return 0;
   }
+}
+
+// Export function to get last API response for debugging
+export function getLastApiResponse() {
+  return lastApiResponse;
 }

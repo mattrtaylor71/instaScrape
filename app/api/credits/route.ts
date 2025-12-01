@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApifyCredits } from '@/lib/apifyCredits';
+import { getApifyCredits, getLastApiResponse } from '@/lib/apifyCredits';
 
 export async function GET(request: NextRequest) {
   console.log('=== /api/credits route called ===');
@@ -17,33 +17,52 @@ export async function GET(request: NextRequest) {
     console.log('getApifyCredits returned:', credits);
     console.log('getApifyCredits took:', `${(endTime - startTime) / 1000}s`);
     
-    // Also try to get the raw API response for debugging
+    // Get the last API response for debugging
+    const lastResponse = getLastApiResponse();
+    
     let debugInfo: any = {
       creditsValue: credits,
       creditsType: typeof credits,
       isZero: credits === 0,
+      lastApiResponse: lastResponse,
+      apiResponseKeys: lastResponse ? Object.keys(lastResponse) : [],
     };
     
-    // Make a direct API call to see the raw response
+    // Also make a fresh API call to see the raw response
     try {
       const token = process.env.APIFY_TOKEN;
       if (token) {
         const testUrl = `https://api.apify.com/v2/users/me/limits?token=${encodeURIComponent(token)}`;
-        const testResponse = await fetch(testUrl);
+        console.log('Making test API call to:', testUrl.replace(token, 'TOKEN_HIDDEN'));
+        const testResponse = await fetch(testUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('Test API response status:', testResponse.status);
+        
         if (testResponse.ok) {
           const testData = await testResponse.json();
           debugInfo.rawApiResponse = testData;
-          debugInfo.apiResponseKeys = Object.keys(testData);
+          debugInfo.rawApiResponseKeys = Object.keys(testData);
+          console.log('Raw API response:', JSON.stringify(testData, null, 2));
         } else {
+          const errorText = await testResponse.text();
           debugInfo.apiError = {
             status: testResponse.status,
             statusText: testResponse.statusText,
-            body: await testResponse.text(),
+            body: errorText,
           };
+          console.error('Test API call failed:', debugInfo.apiError);
         }
+      } else {
+        debugInfo.tokenError = 'Token not available for test call';
       }
     } catch (debugError: any) {
       debugInfo.debugError = debugError.message;
+      debugInfo.debugErrorStack = debugError.stack;
+      console.error('Error making test API call:', debugError);
     }
     
     const response = {
