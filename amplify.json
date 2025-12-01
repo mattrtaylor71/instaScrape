@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "frontend": {
+    "phases": {
+      "preBuild": {
+        "commands": []
+      },
+      "build": {
+        "commands": []
+      }
+    },
+    "cache": {
+      "paths": []
+    }
+  },
+  "functions": {
+    "api-scrape": {
+      "timeout": 900,
+      "memory": 1024
+    },
+    "api-ask": {
+      "timeout": 300,
+      "memory": 512
+    },
+    "api-credits": {
+      "timeout": 30,
+      "memory": 256
+    }
+  }
+}
+
