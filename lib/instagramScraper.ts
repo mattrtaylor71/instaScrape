@@ -77,13 +77,13 @@ export async function scrapeProfileAndPostsByUrl(
       // startUrls: [{ url: `https://www.instagram.com/${username}/` }],
     };
 
-    onProgress?.('Starting Apify scraper...', 15);
+    onProgress?.('Connecting to Instagram...', 15);
     console.log(`Starting Apify Actor ${actorId} for profile: ${username}`);
     
-    onProgress?.('Calling Apify API (this may take a few minutes)...', 20);
+    onProgress?.('Gathering profile information...', 20);
     const run = await client.actor(actorId).call(input);
 
-    onProgress?.('Fetching scraped data...', 40);
+    onProgress?.('Collecting posts and media...', 40);
     // Get results from the default dataset
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
@@ -193,7 +193,7 @@ export async function scrapeProfileAndPostsByUrl(
       });
 
     console.log(`Extracted ${posts.length} posts from ${items.length} total items`);
-    onProgress?.(`Found ${posts.length} posts. Fetching comments...`, 50);
+    onProgress?.(`Found ${posts.length} posts. Reading comments...`, 50);
 
     // Fetch additional comments for posts that don't have them yet
     console.log('Fetching additional comments for posts without comments...');
@@ -220,11 +220,11 @@ export async function scrapeProfileAndPostsByUrl(
           }
 
           console.log(`Fetching comments for post: ${post.url}`);
-          onProgress?.(`Fetching comments for post ${index + 1}/${posts.length}...`, 50 + (index / posts.length) * 30);
+          onProgress?.(`Reading comments from post ${index + 1} of ${posts.length}...`, 50 + (index / posts.length) * 30);
           const commentsResult = await scrapePostCommentsByUrl(post.url, 200, onProgress);
           
           processedCount++;
-          onProgress?.(`Processed ${processedCount}/${posts.length} posts...`, 50 + (processedCount / posts.length) * 30);
+          onProgress?.(`Processed ${processedCount} of ${posts.length} posts...`, 50 + (processedCount / posts.length) * 30);
           
           return {
             ...post,
@@ -274,13 +274,13 @@ export async function scrapePostCommentsByUrl(
       resultsLimit: commentsLimit,
     };
 
-    onProgress?.('Starting comment scraper...', 30);
+    onProgress?.('Connecting to Instagram...', 30);
     console.log(`Starting Apify Actor ${actorId} for post: ${url}`);
     
-    onProgress?.('Calling Apify API for comments...', 40);
+    onProgress?.('Loading comments...', 40);
     const run = await client.actor(actorId).call(input);
 
-    onProgress?.('Fetching comment data...', 60);
+    onProgress?.('Organizing comment data...', 60);
     // Get results from the default dataset
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
@@ -308,7 +308,7 @@ export async function scrapePostCommentsByUrl(
         }
       : undefined;
 
-    onProgress?.('Processing comments...', 80);
+    onProgress?.('Analyzing comments...', 80);
     // Extract comments
     // According to Apify docs: https://apify.com/apify/instagram-comment-scraper
     // Output fields: id, postId, text, position, timestamp, ownerId, ownerIsVerified, ownerUsername, ownerProfilePicUrl
