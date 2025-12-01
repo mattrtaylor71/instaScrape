@@ -189,45 +189,12 @@ export async function scrapeProfileAndPostsByUrl(
 
     console.log(`Extracted ${posts.length} posts from ${items.length} total items`);
 
-    // Fetch additional comments for posts that don't have them yet
-    console.log('Fetching additional comments for posts without comments...');
-    const postsWithComments = await Promise.all(
-      posts.map(async (post) => {
-        // If post already has comments, return it as-is
-        if (post.comments && post.comments.length > 0) {
-          console.log(`Post ${post.id} already has ${post.comments.length} comments, skipping fetch`);
-          return post;
-        }
-
-        try {
-          // Only fetch comments if we have a valid post URL and no comments yet
-          if (!post.url || post.url.includes('post-')) {
-            console.log(`Skipping comment fetch for post ${post.id} - invalid URL`);
-            return post;
-          }
-
-          // Only fetch if commentCount suggests there should be comments
-          if (post.commentCount === 0 || !post.commentCount) {
-            console.log(`Post ${post.id} has no comments (count: ${post.commentCount}), skipping fetch`);
-            return post;
-          }
-
-          console.log(`Fetching comments for post: ${post.url}`);
-          const commentsResult = await scrapePostCommentsByUrl(post.url, 200);
-          
-          return {
-            ...post,
-            comments: commentsResult.comments,
-          };
-        } catch (error: any) {
-          // If comment scraping fails, just log and continue with post without comments
-          console.warn(`Failed to fetch comments for post ${post.url}:`, error.message);
-          return post;
-        }
-      })
-    );
-
-    return { profile, posts: postsWithComments };
+    // NOTE: Comment fetching for each post is disabled to prevent timeouts
+    // Comments are only included if they're already in the post data from the profile scraper
+    // To get comments for a specific post, use the post scraping endpoint directly
+    // This prevents making multiple Apify API calls (one per post) which causes Lambda timeouts
+    
+    return { profile, posts };
   } catch (error: any) {
     console.error('Error scraping Instagram profile:', error);
     throw new Error(
