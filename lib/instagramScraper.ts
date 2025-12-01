@@ -196,10 +196,11 @@ export async function scrapeProfileAndPostsByUrl(
     onProgress?.(`Found ${posts.length} posts. Reading comments...`, 50);
 
     // Fetch additional comments for posts that don't have them yet
-    console.log('Fetching additional comments for posts without comments...');
+    // LIMIT: Only fetch comments for first 2 posts to avoid timeout
+    console.log('Fetching additional comments for first 2 posts without comments...');
     let processedCount = 0;
     const postsWithComments = await Promise.all(
-      posts.map(async (post, index) => {
+      posts.slice(0, 2).map(async (post, index) => {
         // If post already has comments, return it as-is
         if (post.comments && post.comments.length > 0) {
           console.log(`Post ${post.id} already has ${post.comments.length} comments, skipping fetch`);
@@ -240,7 +241,9 @@ export async function scrapeProfileAndPostsByUrl(
     );
 
     onProgress?.('Finalizing results...', 95);
-    return { profile, posts: postsWithComments };
+    // Add remaining posts without comment fetching
+    const remainingPosts = posts.slice(2);
+    return { profile, posts: [...postsWithComments, ...remainingPosts] };
   } catch (error: any) {
     console.error('Error scraping Instagram profile:', error);
     throw new Error(
