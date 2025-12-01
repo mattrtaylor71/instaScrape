@@ -189,11 +189,6 @@ export async function scrapeProfileAndPostsByUrl(
 
     console.log(`Extracted ${posts.length} posts from ${items.length} total items`);
 
-    // NOTE: Comment fetching for each post is disabled to prevent timeouts
-    // Comments are only included if they're already in the post data from the profile scraper
-    // To get comments for a specific post, use the post scraping endpoint directly
-    // This prevents making multiple Apify API calls (one per post) which causes Lambda timeouts
-    
     return { profile, posts };
   } catch (error: any) {
     console.error('Error scraping Instagram profile:', error);
