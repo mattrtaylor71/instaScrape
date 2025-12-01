@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     if (scrapeType === 'profile') {
       const result = await scrapeProfileAndPostsByUrl(
         url,
-        20,
+        5,  // Only 5 posts
         (message, percent) => {
           // Progress updates are logged but can't be polled in serverless
           console.log(`Progress: ${percent}% - ${message}`);

@@ -56,7 +56,7 @@ function extractUsername(url: string): string {
  */
 export async function scrapeProfileAndPostsByUrl(
   url: string,
-  postsLimit: number = 20,  // Restored to 20 with async processing
+  postsLimit: number = 5,  // Reduced to 5 to avoid timeout
   onProgress?: (message: string, percent?: number) => void
 ): Promise<ScrapedProfileResult> {
   const client = getApifyClient();
@@ -220,8 +220,9 @@ export async function scrapeProfileAndPostsByUrl(
           }
 
           console.log(`Fetching comments for post: ${post.url}`);
-          onProgress?.(`Reading comments from post ${index + 1} of ${posts.length}...`, 50 + (index / posts.length) * 30);
-          const commentsResult = await scrapePostCommentsByUrl(post.url, 200, onProgress);
+          onProgress?.(`Reading comments from post ${index + 1} of 2...`, 50 + (index / 2) * 30);
+          // Reduced to 50 comments per post to speed up
+          const commentsResult = await scrapePostCommentsByUrl(post.url, 50, onProgress);
           
           processedCount++;
           onProgress?.(`Processed ${processedCount} of ${posts.length} posts...`, 50 + (processedCount / posts.length) * 30);
