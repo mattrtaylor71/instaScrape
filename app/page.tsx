@@ -457,8 +457,9 @@ export default function Home() {
                         onError={(e) => {
                           // Fallback to original URL if proxy fails
                           const target = e.target as HTMLImageElement;
-                          if (target.src !== scrapedData.profile.profile.profilePicUrl) {
-                            target.src = scrapedData.profile.profile.profilePicUrl || '';
+                          const originalUrl = scrapedData.profile?.profile?.profilePicUrl;
+                          if (originalUrl && target.src !== originalUrl) {
+                            target.src = originalUrl;
                           }
                         }}
                       />
@@ -518,8 +519,9 @@ export default function Home() {
                               onError={(e) => {
                                 // Fallback to original URL if proxy fails
                                 const target = e.target as HTMLImageElement;
-                                if (target.src !== post.imageUrl) {
-                                  target.src = post.imageUrl || '';
+                                const originalUrl = post.imageUrl;
+                                if (originalUrl && target.src !== originalUrl) {
+                                  target.src = originalUrl;
                                 }
                               }}
                             />
@@ -612,8 +614,9 @@ export default function Home() {
                         onError={(e) => {
                           // Fallback to original URL if proxy fails
                           const target = e.target as HTMLImageElement;
-                          if (target.src !== scrapedData.post.post.imageUrl) {
-                            target.src = scrapedData.post.post.imageUrl || '';
+                          const originalUrl = scrapedData.post?.post?.imageUrl;
+                          if (originalUrl && target.src !== originalUrl) {
+                            target.src = originalUrl;
                           }
                         }}
                       />
