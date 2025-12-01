@@ -226,7 +226,7 @@ export async function scrapeProfileAndPostsByUrl(
           const commentsResult = await scrapePostCommentsByUrl(post.url, 50, onProgress);
           
           processedCount++;
-          onProgress?.(`Processed ${processedCount} of ${posts.length} posts...`, 50 + (processedCount / posts.length) * 30);
+          onProgress?.(`Processed ${processedCount} of 2 posts...`, 50 + (processedCount / 2) * 30);
           
           return {
             ...post,
