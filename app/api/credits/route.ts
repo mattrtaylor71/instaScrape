@@ -8,13 +8,21 @@ export async function GET(request: NextRequest) {
   
   try {
     console.log('Calling getApifyCredits()...');
+    const startTime = Date.now();
     const credits = await getApifyCredits();
+    const endTime = Date.now();
     console.log('getApifyCredits returned:', credits);
+    console.log('getApifyCredits took:', `${(endTime - startTime) / 1000}s`);
     
     const response = {
       credits,
       success: true,
       timestamp: new Date().toISOString(),
+      debug: {
+        creditsValue: credits,
+        creditsType: typeof credits,
+        isZero: credits === 0,
+      },
     };
     
     console.log('Returning response:', JSON.stringify(response, null, 2));
