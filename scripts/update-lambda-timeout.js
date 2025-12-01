@@ -34,6 +34,18 @@ async function updateLambdaTimeouts() {
     const listCommand = new ListFunctionsCommand({});
     const response = await lambda.send(listCommand);
     
+    console.log(`\n📊 Total Lambda functions in account: ${response.Functions.length}`);
+    console.log('\n🔍 Searching for Amplify/Next.js functions...\n');
+    
+    // First, let's see ALL functions to help debug
+    console.log('📋 All Lambda functions (first 20):');
+    response.Functions.slice(0, 20).forEach((fn, idx) => {
+      console.log(`   ${idx + 1}. ${fn.FunctionName} (timeout: ${fn.Timeout}s, memory: ${fn.MemorySize}MB)`);
+    });
+    if (response.Functions.length > 20) {
+      console.log(`   ... and ${response.Functions.length - 20} more`);
+    }
+    
     // Filter functions for this Amplify app - be very flexible with matching
     // Next.js API routes on Amplify can have various naming patterns
     const functions = response.Functions.filter(fn => {
@@ -55,13 +67,28 @@ async function updateLambdaTimeouts() {
     }
 
     if (filteredFunctions.length === 0) {
-      console.log('⚠️  No Lambda functions found for this Amplify app');
-      console.log(`Searched ${response.Functions.length} total functions`);
-      console.log('Make sure AWS credentials are configured correctly');
+      console.log('\n⚠️  No Lambda functions found matching Amplify/Next.js patterns');
+      console.log(`\n💡 Tips to find your functions:`);
+      console.log(`   1. Check AWS Lambda Console → Functions`);
+      console.log(`   2. Look for functions with "amplify" or "nextjs" in the name`);
+      console.log(`   3. Check CloudWatch Logs for your API routes to see function names`);
+      console.log(`   4. Next.js API routes might be in Lambda@Edge (check CloudFront)`);
+      console.log(`\n🔍 Searching for functions containing "${AMPLIFY_APP_ID}"...`);
+      const appIdFunctions = response.Functions.filter(fn => 
+        fn.FunctionName.toLowerCase().includes(AMPLIFY_APP_ID.toLowerCase())
+      );
+      if (appIdFunctions.length > 0) {
+        console.log(`   Found ${appIdFunctions.length} function(s) with app ID:`);
+        appIdFunctions.forEach(fn => {
+          console.log(`      - ${fn.FunctionName} (timeout: ${fn.Timeout}s)`);
+        });
+      } else {
+        console.log(`   No functions found with app ID "${AMPLIFY_APP_ID}"`);
+      }
       return;
     }
 
-    console.log(`Found ${filteredFunctions.length} Lambda function(s) (out of ${response.Functions.length} total):\n`);
+    console.log(`\n✅ Found ${filteredFunctions.length} Lambda function(s) matching Amplify/Next.js patterns:\n`);
 
     // Update each function
     for (const func of filteredFunctions) {
