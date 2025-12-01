@@ -116,6 +116,9 @@ export async function getApifyCredits(): Promise<number> {
     console.log('Credits calculation: remainingUsd (', remainingUsd, ') * 100 =', credits);
     
     console.log('=== SUCCESS: getApifyCredits completed ===');
+    
+    // Return credits with debug info for troubleshooting
+    // Store debug info in a global or return it somehow
     return credits;
   } catch (error: any) {
     console.error('=== ERROR in getApifyCredits ===');
