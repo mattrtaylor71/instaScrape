@@ -22,33 +22,53 @@ if (AMPLIFY_APP_ID === 'd21qzkz6ya2vb7' && !process.env.AMPLIFY_APP_ID) {
   console.log('ℹ️  Using default AMPLIFY_APP_ID. Set AMPLIFY_APP_ID env var to override.');
 }
 
-const lambda = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
+// Common AWS regions to check
+const REGIONS_TO_CHECK = [
+  process.env.AWS_REGION || 'us-east-1',
+  'us-east-1',
+  'us-west-2',
+  'eu-west-1',
+  'ap-southeast-1',
+];
 
 async function updateLambdaTimeouts() {
   console.log('🔧 Updating Lambda function timeouts for AWS Amplify...');
   console.log(`App ID: ${AMPLIFY_APP_ID}`);
   console.log(`Branch: ${BRANCH}\n`);
 
-  try {
-    // List all Lambda functions
-    const listCommand = new ListFunctionsCommand({});
-    const response = await lambda.send(listCommand);
-    
-    console.log(`\n📊 Total Lambda functions in account: ${response.Functions.length}`);
-    console.log('\n🔍 Searching for Amplify/Next.js functions...\n');
-    
-    // First, let's see ALL functions to help debug
-    console.log('📋 All Lambda functions (first 20):');
-    response.Functions.slice(0, 20).forEach((fn, idx) => {
-      console.log(`   ${idx + 1}. ${fn.FunctionName} (timeout: ${fn.Timeout}s, memory: ${fn.MemorySize}MB)`);
-    });
-    if (response.Functions.length > 20) {
-      console.log(`   ... and ${response.Functions.length - 20} more`);
+  const allFunctions = [];
+
+  // Check each region
+  for (const region of REGIONS_TO_CHECK) {
+    try {
+      const lambda = new LambdaClient({ region });
+      const listCommand = new ListFunctionsCommand({});
+      const response = await lambda.send(listCommand);
+      
+      if (response.Functions && response.Functions.length > 0) {
+        allFunctions.push(...response.Functions.map(fn => ({ ...fn, region })));
+        console.log(`✅ ${region}: Found ${response.Functions.length} function(s)`);
+      }
+    } catch (error) {
+      console.log(`⚠️  ${region}: ${error.message}`);
     }
+  }
+
+  if (allFunctions.length === 0) {
+    console.log('\n⚠️  No Lambda functions found in any checked region.');
+    console.log('\n💡 Try running: node scripts/list-lambda-functions.js');
+    console.log('   This will help you find functions across all regions.');
+    return;
+  }
+
+  try {
+    
+    console.log(`\n📊 Total Lambda functions found: ${allFunctions.length}`);
+    console.log('\n🔍 Searching for Amplify/Next.js functions...\n');
     
     // Filter functions for this Amplify app - be very flexible with matching
     // Next.js API routes on Amplify can have various naming patterns
-    const functions = response.Functions.filter(fn => {
+    const functions = allFunctions.filter(fn => {
       const name = fn.FunctionName.toLowerCase();
       // Match any function that could be a Next.js API route
       return name.includes('amplify') ||
@@ -69,18 +89,19 @@ async function updateLambdaTimeouts() {
     if (filteredFunctions.length === 0) {
       console.log('\n⚠️  No Lambda functions found matching Amplify/Next.js patterns');
       console.log(`\n💡 Tips to find your functions:`);
-      console.log(`   1. Check AWS Lambda Console → Functions`);
-      console.log(`   2. Look for functions with "amplify" or "nextjs" in the name`);
-      console.log(`   3. Check CloudWatch Logs for your API routes to see function names`);
-      console.log(`   4. Next.js API routes might be in Lambda@Edge (check CloudFront)`);
+      console.log(`   1. Run: node scripts/list-lambda-functions.js`);
+      console.log(`   2. Check AWS Lambda Console → Functions (check all regions)`);
+      console.log(`   3. Look for functions with "amplify" or "nextjs" in the name`);
+      console.log(`   4. Check CloudWatch Logs for your API routes to see function names`);
+      console.log(`   5. Next.js API routes might be in Lambda@Edge (check CloudFront)`);
       console.log(`\n🔍 Searching for functions containing "${AMPLIFY_APP_ID}"...`);
-      const appIdFunctions = response.Functions.filter(fn => 
+      const appIdFunctions = allFunctions.filter(fn => 
         fn.FunctionName.toLowerCase().includes(AMPLIFY_APP_ID.toLowerCase())
       );
       if (appIdFunctions.length > 0) {
         console.log(`   Found ${appIdFunctions.length} function(s) with app ID:`);
         appIdFunctions.forEach(fn => {
-          console.log(`      - ${fn.FunctionName} (timeout: ${fn.Timeout}s)`);
+          console.log(`      - ${fn.FunctionName} [${fn.region}] (timeout: ${fn.Timeout}s)`);
         });
       } else {
         console.log(`   No functions found with app ID "${AMPLIFY_APP_ID}"`);
@@ -93,8 +114,9 @@ async function updateLambdaTimeouts() {
     // Update each function
     for (const func of filteredFunctions) {
       const functionName = func.FunctionName;
+      const region = func.region;
       const currentTimeout = func.Timeout || 'unknown';
-      console.log(`\n📋 Function: ${functionName}`);
+      console.log(`\n📋 Function: ${functionName} [${region}]`);
       console.log(`   Current timeout: ${currentTimeout} seconds`);
 
       // Determine timeout based on function name
@@ -125,11 +147,12 @@ async function updateLambdaTimeouts() {
 
       try {
         console.log(`   🔄 Updating timeout from ${currentTimeout}s to ${timeout}s...`);
+        const lambdaClient = new LambdaClient({ region });
         const updateCommand = new UpdateFunctionConfigurationCommand({
           FunctionName: functionName,
           Timeout: timeout,
         });
-        await lambda.send(updateCommand);
+        await lambdaClient.send(updateCommand);
         console.log(`   ✅ Successfully updated timeout to ${timeout} seconds`);
       } catch (error) {
         console.error(`   ❌ Failed to update: ${error.message}`);
@@ -138,7 +161,8 @@ async function updateLambdaTimeouts() {
 
     console.log('\n✨ Lambda timeout update complete!');
     console.log('\n📊 Summary:');
-    console.log(`   - Total functions found: ${response.Functions.length}`);
+    console.log(`   - Total functions found: ${allFunctions.length}`);
+    console.log(`   - Functions matching patterns: ${functions.length}`);
     console.log(`   - Functions updated: ${filteredFunctions.length}`);
     console.log('\n⚠️  Note: Amplify may reset these settings on the next deployment.');
     console.log('   This script runs automatically after each build to maintain timeouts.');
