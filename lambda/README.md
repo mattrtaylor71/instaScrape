@@ -31,7 +31,7 @@ This Lambda function handles Instagram scraping with a 15-minute timeout (Lambda
    ```bash
    # In AWS Amplify Console, add environment variable:
    SCRAPE_LAMBDA_FUNCTION_NAME=instagram-scrape-lambda-dev-scrape
-   AWS_REGION=us-east-1
+   LAMBDA_REGION=us-east-1
    ```
 
 ### Option 2: Manual AWS Console Deployment
@@ -58,7 +58,7 @@ This Lambda function handles Instagram scraping with a 15-minute timeout (Lambda
 5. **Set function name** in Next.js app:
    - In AWS Amplify Console, add environment variable:
    - `SCRAPE_LAMBDA_FUNCTION_NAME`: Your Lambda function name
-   - `AWS_REGION`: Your AWS region (e.g., us-east-1)
+   - `LAMBDA_REGION`: Your AWS region (e.g., us-east-1)
 
 6. **Set IAM permissions**:
    - The Next.js app needs permission to invoke this Lambda
@@ -97,5 +97,5 @@ aws lambda invoke \
 The Next.js app will automatically invoke this Lambda function when `/api/scrape` is called. Make sure to set:
 
 - `SCRAPE_LAMBDA_FUNCTION_NAME`: The name of your Lambda function
-- `AWS_REGION`: The AWS region where the Lambda is deployed
+- `LAMBDA_REGION`: The AWS region where the Lambda is deployed
 

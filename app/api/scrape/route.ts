@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Try to invoke Lambda function for scraping (15-minute timeout)
     // If Lambda isn't configured or credentials aren't available, fall back to direct scraping
     const lambdaFunctionName = process.env.SCRAPE_LAMBDA_FUNCTION_NAME;
-    const lambdaRegion = process.env.AWS_REGION || 'us-east-1';
+    const lambdaRegion = process.env.LAMBDA_REGION || 'us-east-1';
 
     // Only try Lambda if function name is configured
     if (lambdaFunctionName) {

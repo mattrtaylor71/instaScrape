@@ -29,5 +29,5 @@ echo "11. Save and test!"
 echo ""
 echo "Then set in Amplify Console:"
 echo "  SCRAPE_LAMBDA_FUNCTION_NAME=instagram-scrape-lambda"
-echo "  AWS_REGION=us-east-1 (or your region)"
+echo "  LAMBDA_REGION=us-east-1 (or your region)"
 

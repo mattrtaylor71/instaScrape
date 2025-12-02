@@ -53,7 +53,7 @@ In **AWS Amplify Console** → Your App → Environment variables:
 
 Add:
 - `SCRAPE_LAMBDA_FUNCTION_NAME` = `instagram-scrape-lambda`
-- `AWS_REGION` = `us-east-1` (or your Lambda's region)
+- `LAMBDA_REGION` = `us-east-1` (or your Lambda's region)
 
 ### 4. Set IAM Permissions
 
