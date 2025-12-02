@@ -116,6 +116,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result);
     } catch (error: any) {
       console.error('Lambda invocation error:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       
       // Provide helpful error messages
       if (error.name === 'ResourceNotFoundException' || error.message?.includes('Function not found')) {
@@ -124,17 +128,34 @@ export async function POST(request: NextRequest) {
             error: 'Lambda function not found',
             message: `Function "${lambdaFunctionName}" not found in region "${lambdaRegion}". Please verify the function name and region.`,
             details: 'See lambda/README.md for deployment instructions.',
+            debug: {
+              functionName: lambdaFunctionName,
+              region: lambdaRegion,
+              errorName: error.name,
+              errorMessage: error.message,
+            },
           },
           { status: 503 }
         );
       }
 
-      if (error.message?.includes('credentials') || error.message?.includes('Could not load credentials')) {
+      if (error.name === 'UnrecognizedClientException' || 
+          error.message?.includes('credentials') || 
+          error.message?.includes('Could not load credentials') ||
+          error.code === 'CredentialsError') {
         return NextResponse.json(
           {
             error: 'AWS credentials not available',
             message: 'The Amplify execution role needs permission to invoke Lambda functions.',
-            details: 'See lambda/README.md for IAM permissions setup.',
+            details: 'See FIX_IAM_PERMISSIONS.md for IAM permissions setup.',
+            debug: {
+              errorName: error.name,
+              errorCode: error.code,
+              errorMessage: error.message,
+              functionName: lambdaFunctionName,
+              region: lambdaRegion,
+              suggestion: 'Verify the IAM policy was added to the Amplify execution role and wait 1-2 minutes for permissions to propagate.',
+            },
           },
           { status: 503 }
         );
@@ -144,6 +165,13 @@ export async function POST(request: NextRequest) {
         {
           error: error.message || 'Failed to invoke Lambda function',
           details: error.toString(),
+          debug: {
+            errorName: error.name,
+            errorCode: error.code,
+            errorMessage: error.message,
+            functionName: lambdaFunctionName,
+            region: lambdaRegion,
+          },
         },
         { status: 500 }
       );
