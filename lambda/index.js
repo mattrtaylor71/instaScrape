@@ -260,21 +260,49 @@ exports.handler = async (event) => {
         const webhookUrl = process.env.WEBHOOK_URL || 
           `https://main.d21qzkz6ya2vb7.amplifyapp.com/api/scrape/webhook`;
         
-        console.log(`Posting results to webhook: ${webhookUrl}`);
+        console.log(`=== WEBHOOK CALL START ===`);
+        console.log(`JobId: ${jobId}`);
+        console.log(`Webhook URL: ${webhookUrl}`);
+        console.log(`Result type: ${result?.type || 'unknown'}`);
+        console.log(`Result keys: ${result ? Object.keys(result).join(', ') : 'none'}`);
+        
         const axios = require('axios');
-        const response = await axios.post(webhookUrl, {
+        const webhookPayload = {
           jobId,
           result,
-        }, {
-          timeout: 10000, // 10 second timeout
+        };
+        
+        console.log(`Webhook payload size: ${JSON.stringify(webhookPayload).length} bytes`);
+        
+        const response = await axios.post(webhookUrl, webhookPayload, {
+          timeout: 30000, // 30 second timeout (increased from 10)
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
-        console.log('Webhook called successfully:', response.status);
+        
+        console.log(`=== WEBHOOK SUCCESS ===`);
+        console.log(`Status: ${response.status}`);
+        console.log(`Response: ${JSON.stringify(response.data)}`);
       } catch (webhookError) {
-        console.error('Failed to call webhook:', webhookError.message);
-        console.error('Webhook error details:', webhookError.response?.data || webhookError.message);
+        console.error(`=== WEBHOOK FAILED ===`);
+        console.error(`Error name: ${webhookError.name}`);
+        console.error(`Error message: ${webhookError.message}`);
+        console.error(`Error code: ${webhookError.code}`);
+        if (webhookError.response) {
+          console.error(`Response status: ${webhookError.response.status}`);
+          console.error(`Response data: ${JSON.stringify(webhookError.response.data)}`);
+        }
+        if (webhookError.request) {
+          console.error(`Request made but no response received`);
+          console.error(`Request config: ${JSON.stringify(webhookError.config)}`);
+        }
+        console.error(`Full error: ${JSON.stringify(webhookError, Object.getOwnPropertyNames(webhookError))}`);
         // Don't fail the Lambda if webhook fails - result is still valid
         // The frontend will poll and eventually timeout if webhook never succeeds
       }
+    } else {
+      console.log('No jobId provided - skipping webhook call (sync invocation)');
     }
     
     // Return result (for sync invocations or debugging)

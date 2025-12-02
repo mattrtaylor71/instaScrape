@@ -8,6 +8,10 @@ export async function GET(
   try {
     const { jobId } = await params;
     
+    console.log(`=== STATUS CHECK ===`);
+    console.log(`JobId: ${jobId}`);
+    console.log(`Request URL: ${request.url}`);
+    
     if (!jobId) {
       return NextResponse.json(
         { error: 'Job ID is required' },
@@ -16,6 +20,15 @@ export async function GET(
     }
 
     const job = getJob(jobId);
+    console.log(`Job found: ${job ? 'YES' : 'NO'}`);
+    if (job) {
+      console.log(`Job status: ${job.status}`);
+      console.log(`Job has result: ${!!job.result}`);
+      console.log(`Job has error: ${!!job.error}`);
+    } else {
+      console.log('⚠️ Job not found in memory. This might be a serverless instance issue.');
+      console.log('Each API request can hit a different Lambda instance, so in-memory state is not shared.');
+    }
 
     if (!job) {
       return NextResponse.json(
