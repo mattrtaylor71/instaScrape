@@ -228,7 +228,69 @@ export default function Home() {
       setScrapeError(error.message || 'An error occurred while scraping');
       setIsScraping(false);
       console.error('Scrape error:', error);
+      setJobId(null);
     }
+  };
+
+  const pollJobStatus = async (id: string) => {
+    const maxAttempts = 120; // 10 minutes max (5 second intervals)
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const response = await fetch(`/api/scrape/status/${id}`);
+        const data = await response.json();
+
+        if (data.status === 'completed') {
+          setLoadingProgress(100);
+          setLoadingMessage('Complete!');
+          setTimeout(() => {
+            setScrapedData(data.result);
+            setIsScraping(false);
+            setJobId(null);
+            fetchCredits();
+          }, 500);
+          return;
+        }
+
+        if (data.status === 'failed') {
+          setScrapeError(data.error || 'Scraping failed');
+          setIsScraping(false);
+          setJobId(null);
+          return;
+        }
+
+        // Still processing
+        attempts++;
+        if (attempts >= maxAttempts) {
+          setScrapeError('Scraping timed out. Please try again.');
+          setIsScraping(false);
+          setJobId(null);
+          return;
+        }
+
+        // Update progress (rough estimate)
+        const progress = Math.min(10 + (attempts * 2), 90);
+        setLoadingProgress(progress);
+        setLoadingMessage(`Scraping... (${attempts * 5}s)`);
+
+        // Poll again in 5 seconds
+        setTimeout(poll, 5000);
+      } catch (error: any) {
+        console.error('Polling error:', error);
+        attempts++;
+        if (attempts >= maxAttempts) {
+          setScrapeError('Failed to check scraping status');
+          setIsScraping(false);
+          setJobId(null);
+        } else {
+          setTimeout(poll, 5000);
+        }
+      }
+    };
+
+    // Start polling
+    poll();
   };
 
   const handleAsk = async () => {
