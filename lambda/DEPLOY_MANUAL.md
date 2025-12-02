@@ -86,7 +86,7 @@ aws lambda create-function \
   --function-name instagram-scrape-lambda \
   --runtime nodejs18.x \
   --role arn:aws:iam::YOUR_ACCOUNT:role/lambda-execution-role \
-  --handler scrape-handler.handler \
+  --handler index.handler \
   --zip-file fileb://function.zip \
   --timeout 900 \
   --memory-size 1024 \

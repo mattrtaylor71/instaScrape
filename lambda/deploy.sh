@@ -5,9 +5,9 @@
 echo "📦 Packaging Lambda function for deployment..."
 
 # Create deployment package
-zip -r function.zip scrape-handler.js node_modules/ package.json 2>/dev/null || {
+zip -r function.zip index.js node_modules/ package.json 2>/dev/null || {
   echo "Creating function.zip..."
-  zip -r function.zip scrape-handler.js package.json
+  zip -r function.zip index.js package.json
   echo "⚠️  Note: node_modules not included. You'll need to install dependencies in Lambda."
 }
 

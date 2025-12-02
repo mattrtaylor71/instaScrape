@@ -14,7 +14,7 @@ provider:
 
 functions:
   scrape:
-    handler: scrape-handler.handler
+    handler: index.handler
     timeout: 900  # 15 minutes
     memorySize: 1024
     events:

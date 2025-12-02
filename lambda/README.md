@@ -44,7 +44,7 @@ This Lambda function handles Instagram scraping with a 15-minute timeout (Lambda
    - Architecture: x86_64
 
 2. **Upload code**:
-   - Copy `scrape-handler.js` content
+   - Copy `index.js` content
    - Paste into Lambda function code editor
 
 3. **Set environment variables**:

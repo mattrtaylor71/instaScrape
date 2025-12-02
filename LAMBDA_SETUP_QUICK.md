@@ -30,6 +30,12 @@ You have two options:
      ```
    - Upload `function.zip`
    - Click "Save"
+   
+6. **Verify handler** (IMPORTANT):
+   - Go to "Configuration" tab
+   - Click "General configuration" → "Edit"
+   - **Handler**: Should be `index.handler` (Lambda will auto-detect this)
+   - If it shows something else, change it to `index.handler`
 
 6. **Configure timeout**:
    - Go to "Configuration" tab
