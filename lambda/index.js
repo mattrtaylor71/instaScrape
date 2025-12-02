@@ -256,18 +256,24 @@ exports.handler = async (event) => {
       try {
         // Get the webhook URL from environment or construct it
         // For Amplify, we need to POST to the deployed app's webhook endpoint
-        const webhookUrl = process.env.WEBHOOK_URL || 'https://main.d21qzkz6ya2vb7.amplifyapp.com/api/scrape/webhook';
+        // The webhook URL should be set as an environment variable in Lambda
+        const webhookUrl = process.env.WEBHOOK_URL || 
+          `https://main.d21qzkz6ya2vb7.amplifyapp.com/api/scrape/webhook`;
         
         console.log(`Posting results to webhook: ${webhookUrl}`);
         const axios = require('axios');
-        await axios.post(webhookUrl, {
+        const response = await axios.post(webhookUrl, {
           jobId,
           result,
+        }, {
+          timeout: 10000, // 10 second timeout
         });
-        console.log('Webhook called successfully');
+        console.log('Webhook called successfully:', response.status);
       } catch (webhookError) {
         console.error('Failed to call webhook:', webhookError.message);
+        console.error('Webhook error details:', webhookError.response?.data || webhookError.message);
         // Don't fail the Lambda if webhook fails - result is still valid
+        // The frontend will poll and eventually timeout if webhook never succeeds
       }
     }
     
