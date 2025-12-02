@@ -4,7 +4,7 @@
   "description": "Lambda function for Instagram scraping",
   "main": "index.js",
   "dependencies": {
-    "apify-client": "^2.8.2"
+    "apify-client": "^2.8.2",
+    "axios": "^1.13.2"
   }
 }
-

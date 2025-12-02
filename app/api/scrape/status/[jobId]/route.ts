@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jobQueue } from '@/lib/jobQueue';
+import { getJob } from '@/lib/jobQueue';
 
 export async function GET(
   request: NextRequest,
@@ -7,10 +7,7 @@ export async function GET(
 ) {
   try {
     const { jobId } = await params;
-
-    console.log(`[Status Check] Looking for job: ${jobId}`);
-    console.log(`[Status Check] Total jobs in queue: ${jobQueue.getJobCount?.() || 'unknown'}`);
-
+    
     if (!jobId) {
       return NextResponse.json(
         { error: 'Job ID is required' },
@@ -18,33 +15,38 @@ export async function GET(
       );
     }
 
-    const job = jobQueue.getJob(jobId);
+    const job = getJob(jobId);
 
     if (!job) {
-      console.log(`[Status Check] Job ${jobId} not found in queue`);
-      // Return a more informative error
       return NextResponse.json(
-        { 
-          error: 'Job not found',
-          message: 'The job may have expired or is being processed on a different server instance. This can happen with serverless deployments where each request may hit a different server.',
-          jobId 
-        },
+        { error: 'Job not found' },
         { status: 404 }
       );
     }
 
-    console.log(`[Status Check] Found job ${jobId} with status: ${job.status}`);
+    if (job.status === 'completed') {
+      return NextResponse.json({
+        jobId: job.id,
+        status: job.status,
+        result: job.result,
+        completedAt: job.completedAt,
+      });
+    }
 
-    // Return job status
+    if (job.status === 'failed') {
+      return NextResponse.json({
+        jobId: job.id,
+        status: job.status,
+        error: job.error,
+        completedAt: job.completedAt,
+      }, { status: 500 });
+    }
+
+    // Still processing
     return NextResponse.json({
-      id: job.id,
+      jobId: job.id,
       status: job.status,
-      createdAt: job.createdAt.toISOString(),
-      startedAt: job.startedAt?.toISOString(),
-      completedAt: job.completedAt?.toISOString(),
-      result: job.result,
-      error: job.error,
-      progress: job.progress,
+      message: 'Scraping in progress...',
     });
   } catch (error: any) {
     console.error('Status check error:', error);
@@ -57,4 +59,3 @@ export async function GET(
     );
   }
 }
-

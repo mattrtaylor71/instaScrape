@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { createJob, updateJob } from '@/lib/jobQueue';
 import type { ScrapeRequest, ScrapeResponse } from '@/types/instagram';
 
 function parseInstagramUrl(url: string): 'profile' | 'post' {
@@ -87,46 +88,44 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Create a job for async processing
+      const jobId = createJob();
+      updateJob(jobId, { status: 'processing' });
+
       // Configure Lambda client
-      // On Amplify, credentials should be automatically available from the execution role
-      // The default credential provider chain will try:
-      // 1. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-      // 2. Instance metadata service (for Lambda/EC2)
-      // 3. IAM role credentials
       const lambdaClient = new LambdaClient({
         region: lambdaRegion,
-        // Don't specify credentials - let it use the default provider chain
-        // This will automatically use the execution role credentials on Amplify
       });
       
+      // Invoke Lambda asynchronously (Event type) so it doesn't block
       const invokeCommand = new InvokeCommand({
         FunctionName: lambdaFunctionName,
-        InvocationType: 'RequestResponse', // Synchronous invocation - waits for response
+        InvocationType: 'Event', // Async invocation - doesn't wait for response
         Payload: JSON.stringify({
           body: JSON.stringify({ url, mode }),
+          jobId, // Pass job ID so Lambda can update status
         }),
       });
 
-      console.log(`Invoking Lambda function: ${lambdaFunctionName} in region: ${lambdaRegion}`);
-      console.log(`Note: Amplify API route timeout is ~30 seconds. Lambda timeout is 5-15 minutes.`);
-      console.log(`If scraping takes longer than 30 seconds, the API route will timeout even though Lambda continues.`);
+      console.log(`Invoking Lambda function asynchronously: ${lambdaFunctionName} in region: ${lambdaRegion}`);
+      console.log(`Job ID: ${jobId}`);
       
-      const lambdaResponse = await lambdaClient.send(invokeCommand);
+      // Fire and forget - Lambda will process in background
+      await lambdaClient.send(invokeCommand).catch((error) => {
+        console.error('Failed to invoke Lambda:', error);
+        updateJob(jobId, {
+          status: 'failed',
+          error: error.message || 'Failed to invoke Lambda function',
+        });
+        throw error;
+      });
 
-      if (!lambdaResponse.Payload) {
-        throw new Error('No response from Lambda function');
-      }
-
-      const responseText = new TextDecoder().decode(lambdaResponse.Payload);
-      const lambdaResult = JSON.parse(responseText);
-
-      if (lambdaResult.statusCode !== 200) {
-        const errorBody = JSON.parse(lambdaResult.body || '{}');
-        throw new Error(errorBody.error || 'Lambda function returned an error');
-      }
-
-      const result = JSON.parse(lambdaResult.body);
-      return NextResponse.json(result);
+      // Return immediately with job ID for polling
+      return NextResponse.json({
+        jobId,
+        status: 'processing',
+        message: 'Scraping started. Polling for results...',
+      });
     } catch (error: any) {
       console.error('Lambda invocation error:', error);
       console.error('Error name:', error.name);

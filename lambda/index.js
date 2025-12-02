@@ -114,28 +114,28 @@ async function scrapeProfile(url, postsLimit = 5) {
     shortcode: item.shortCode || item.shortcode,
   }));
 
-  // Fetch comments for first post only (reduced scope to avoid timeout)
-  // Only fetch if post has comments and a valid URL
-  const firstPost = posts[0];
-  let postsWithComments = [];
-  
-  if (firstPost && firstPost.url && !firstPost.url.includes('post-') && firstPost.commentCount && firstPost.commentCount > 0) {
-    try {
-      console.log(`Fetching comments for first post: ${firstPost.url}`);
-      const commentsResult = await scrapePostComments(firstPost.url, 30); // Reduced to 30 comments
-      postsWithComments = [{
-        ...firstPost,
-        comments: commentsResult.comments,
-      }];
-    } catch (error) {
-      console.warn(`Failed to fetch comments for post ${firstPost.url}:`, error.message);
-      postsWithComments = [firstPost];
-    }
-  } else {
-    postsWithComments = firstPost ? [firstPost] : [];
-  }
+  // Fetch comments for first 2 posts
+  const postsWithComments = await Promise.all(
+    posts.slice(0, 2).map(async (post) => {
+      if (!post.url || post.url.includes('post-') || !post.commentCount || post.commentCount === 0) {
+        return post;
+      }
 
-  const remainingPosts = posts.slice(1);
+      try {
+        console.log(`Fetching comments for post: ${post.url}`);
+        const commentsResult = await scrapePostComments(post.url, 50);
+        return {
+          ...post,
+          comments: commentsResult.comments,
+        };
+      } catch (error) {
+        console.warn(`Failed to fetch comments for post ${post.url}:`, error.message);
+        return post;
+      }
+    })
+  );
+
+  const remainingPosts = posts.slice(2);
   return {
     profile,
     posts: [...postsWithComments, ...remainingPosts],
@@ -189,7 +189,13 @@ exports.handler = async (event) => {
   console.log('Lambda scrape handler invoked:', JSON.stringify(event));
 
   try {
-    const { url, mode = 'auto' } = JSON.parse(event.body || '{}');
+    const body = JSON.parse(event.body || '{}');
+    const { url, mode = 'auto', jobId } = body;
+    
+    // If jobId is provided, we need to update the job status
+    // But since we're in Lambda, we can't directly update the Next.js job queue
+    // We'll return the result and the Next.js API route will update it
+    // For now, we'll just process and return
 
     if (!url) {
       return {
@@ -231,22 +237,41 @@ exports.handler = async (event) => {
 
     let result;
     if (scrapeType === 'profile') {
-      // Reduced scope: 3 posts, comments only for first post, 30 comments max
-      // This should complete in <30 seconds to avoid Amplify API route timeout
-      const profileResult = await scrapeProfile(url, 3);
+      const profileResult = await scrapeProfile(url, 5);
       result = {
         type: 'profile',
         profile: profileResult,
       };
     } else {
-      // Reduced scope: 50 comments max for single post scrape
-      const commentsResult = await scrapePostComments(url, 50);
+      const commentsResult = await scrapePostComments(url, 200);
       result = {
         type: 'post',
         post: commentsResult,
       };
     }
 
+    // If jobId is provided, POST results to webhook endpoint
+    // This allows async Lambda invocation to update job status
+    if (jobId) {
+      try {
+        // Get the webhook URL from environment or construct it
+        // For Amplify, we need to POST to the deployed app's webhook endpoint
+        const webhookUrl = process.env.WEBHOOK_URL || 'https://main.d21qzkz6ya2vb7.amplifyapp.com/api/scrape/webhook';
+        
+        console.log(`Posting results to webhook: ${webhookUrl}`);
+        const axios = require('axios');
+        await axios.post(webhookUrl, {
+          jobId,
+          result,
+        });
+        console.log('Webhook called successfully');
+      } catch (webhookError) {
+        console.error('Failed to call webhook:', webhookError.message);
+        // Don't fail the Lambda if webhook fails - result is still valid
+      }
+    }
+    
+    // Return result (for sync invocations or debugging)
     return {
       statusCode: 200,
       headers: {
@@ -257,6 +282,27 @@ exports.handler = async (event) => {
     };
   } catch (error) {
     console.error('Lambda error:', error);
+    
+    // If jobId is provided, notify webhook of failure
+    const body = JSON.parse(event.body || '{}');
+    const { jobId } = body;
+    
+    if (jobId) {
+      try {
+        const webhookUrl = process.env.WEBHOOK_URL || 'https://main.d21qzkz6ya2vb7.amplifyapp.com/api/scrape/webhook';
+        const axios = require('axios');
+        await axios.post(webhookUrl, {
+          jobId,
+          error: {
+            message: error.message || 'Failed to scrape Instagram',
+            details: error.toString(),
+          },
+        });
+      } catch (webhookError) {
+        console.error('Failed to call webhook with error:', webhookError.message);
+      }
+    }
+    
     return {
       statusCode: 500,
       headers: {
