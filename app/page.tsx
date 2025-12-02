@@ -26,6 +26,7 @@ export default function Home() {
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [askError, setAskError] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   // Check access from localStorage (only on client side)
   useEffect(() => {
@@ -189,7 +190,8 @@ export default function Home() {
     setAskError(null);
     setConversationHistory([]);
     setLoadingProgress(0);
-    setLoadingMessage('Initializing...');
+    setLoadingMessage('Starting scrape...');
+    setJobId(null);
 
     try {
       const response = await fetch('/api/scrape', {
@@ -200,45 +202,28 @@ export default function Home() {
         body: JSON.stringify({ url: url.trim(), mode }),
       });
 
-      // Handle timeout errors before trying to parse JSON
-      if (response.status === 504) {
-        throw new Error(
-          'Scraping timed out. Instagram scraping can take several minutes. ' +
-          'The request may still be processing on the server. Please wait a moment and try again, ' +
-          'or try with a profile that has fewer posts.'
-        );
-      }
-
-      // Try to parse JSON, but handle empty responses
-      let data;
-      try {
-        const text = await response.text();
-        if (!text) {
-          throw new Error('Empty response from server');
-        }
-        data = JSON.parse(text);
-      } catch (parseError: any) {
-        if (response.status >= 500) {
-          throw new Error(
-            'Server error occurred. The scraping may still be processing. ' +
-            'Please wait a moment and try again.'
-          );
-        }
-        throw new Error('Failed to parse server response');
-      }
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || `Failed to scrape (${response.status})`);
+        throw new Error(data?.error || `Failed to start scrape (${response.status})`);
       }
 
-      setLoadingProgress(100);
-      setLoadingMessage('Complete!');
-      setTimeout(() => {
-        setScrapedData(data);
-        setIsScraping(false);
-        // Update credits after scraping
-        fetchCredits();
-      }, 500);
+      // Check if we got a jobId (async processing)
+      if (data.jobId) {
+        setJobId(data.jobId);
+        setLoadingMessage('Scraping in progress...');
+        // Start polling for results
+        pollJobStatus(data.jobId);
+      } else {
+        // Synchronous response (shouldn't happen with async, but handle it)
+        setLoadingProgress(100);
+        setLoadingMessage('Complete!');
+        setTimeout(() => {
+          setScrapedData(data);
+          setIsScraping(false);
+          fetchCredits();
+        }, 500);
+      }
     } catch (error: any) {
       setScrapeError(error.message || 'An error occurred while scraping');
       setIsScraping(false);
