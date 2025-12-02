@@ -87,7 +87,17 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const lambdaClient = new LambdaClient({ region: lambdaRegion });
+      // Configure Lambda client
+      // On Amplify, credentials should be automatically available from the execution role
+      // The default credential provider chain will try:
+      // 1. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+      // 2. Instance metadata service (for Lambda/EC2)
+      // 3. IAM role credentials
+      const lambdaClient = new LambdaClient({
+        region: lambdaRegion,
+        // Don't specify credentials - let it use the default provider chain
+        // This will automatically use the execution role credentials on Amplify
+      });
       
       const invokeCommand = new InvokeCommand({
         FunctionName: lambdaFunctionName,
