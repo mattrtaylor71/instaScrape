@@ -1,0 +1,18 @@
+{
+  "testProfile": {
+    "body": "{\"url\":\"https://www.instagram.com/instagram/\",\"mode\":\"auto\"}"
+  },
+  "testProfileExplicit": {
+    "body": "{\"url\":\"https://www.instagram.com/instagram/\",\"mode\":\"profile\"}"
+  },
+  "testPost": {
+    "body": "{\"url\":\"https://www.instagram.com/p/C1234567890/\",\"mode\":\"auto\"}"
+  },
+  "testPostExplicit": {
+    "body": "{\"url\":\"https://www.instagram.com/p/C1234567890/\",\"mode\":\"post\"}"
+  },
+  "testReel": {
+    "body": "{\"url\":\"https://www.instagram.com/reel/ABC123/\",\"mode\":\"auto\"}"
+  }
+}
+
