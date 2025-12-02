@@ -27,6 +27,7 @@ export default function Home() {
   const [askError, setAskError] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   // Check access from localStorage (only on client side)
   useEffect(() => {
