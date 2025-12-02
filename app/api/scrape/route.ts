@@ -61,12 +61,26 @@ export async function POST(request: NextRequest) {
     const lambdaFunctionName = process.env.SCRAPE_LAMBDA_FUNCTION_NAME;
     const lambdaRegion = process.env.LAMBDA_REGION || 'us-east-1';
 
+    // Debug logging
+    console.log('Lambda configuration check:');
+    console.log('  SCRAPE_LAMBDA_FUNCTION_NAME:', lambdaFunctionName || 'NOT SET');
+    console.log('  LAMBDA_REGION:', lambdaRegion);
+    console.log('  All env vars with LAMBDA:', Object.keys(process.env).filter(k => k.includes('LAMBDA')));
+    console.log('  All env vars with SCRAPE:', Object.keys(process.env).filter(k => k.includes('SCRAPE')));
+
     if (!lambdaFunctionName) {
       return NextResponse.json(
         {
           error: 'Lambda function not configured',
           message: 'Please set SCRAPE_LAMBDA_FUNCTION_NAME environment variable in AWS Amplify Console.',
           details: 'See lambda/README.md for deployment instructions.',
+          debug: {
+            lambdaFunctionName: lambdaFunctionName || 'NOT SET',
+            lambdaRegion: lambdaRegion,
+            availableEnvVars: Object.keys(process.env).filter(k => 
+              k.includes('LAMBDA') || k.includes('SCRAPE')
+            ),
+          },
         },
         { status: 503 }
       );
