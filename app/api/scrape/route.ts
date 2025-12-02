@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { scrapeProfileAndPostsByUrl, scrapePostCommentsByUrl } from '@/lib/instagramScraper';
 import type { ScrapeRequest, ScrapeResponse } from '@/types/instagram';
 
 function parseInstagramUrl(url: string): 'profile' | 'post' {
@@ -57,60 +58,97 @@ export async function POST(request: NextRequest) {
       scrapeType = mode;
     }
 
-    // Invoke Lambda function for scraping (15-minute timeout)
-    const lambdaFunctionName = process.env.SCRAPE_LAMBDA_FUNCTION_NAME || 'instagram-scrape-lambda-dev-scrape';
+    // Try to invoke Lambda function for scraping (15-minute timeout)
+    // If Lambda isn't configured or credentials aren't available, fall back to direct scraping
+    const lambdaFunctionName = process.env.SCRAPE_LAMBDA_FUNCTION_NAME;
     const lambdaRegion = process.env.AWS_REGION || 'us-east-1';
 
-    try {
-      const lambdaClient = new LambdaClient({ region: lambdaRegion });
-      
-      const invokeCommand = new InvokeCommand({
-        FunctionName: lambdaFunctionName,
-        InvocationType: 'RequestResponse', // Synchronous invocation
-        Payload: JSON.stringify({
-          body: JSON.stringify({ url, mode }),
-        }),
-      });
+    // Only try Lambda if function name is configured
+    if (lambdaFunctionName) {
+      try {
+        const lambdaClient = new LambdaClient({ region: lambdaRegion });
+        
+        const invokeCommand = new InvokeCommand({
+          FunctionName: lambdaFunctionName,
+          InvocationType: 'RequestResponse', // Synchronous invocation
+          Payload: JSON.stringify({
+            body: JSON.stringify({ url, mode }),
+          }),
+        });
 
-      console.log(`Invoking Lambda function: ${lambdaFunctionName} in region: ${lambdaRegion}`);
-      const lambdaResponse = await lambdaClient.send(invokeCommand);
+        console.log(`Invoking Lambda function: ${lambdaFunctionName} in region: ${lambdaRegion}`);
+        const lambdaResponse = await lambdaClient.send(invokeCommand);
 
-      if (!lambdaResponse.Payload) {
-        throw new Error('No response from Lambda function');
+        if (!lambdaResponse.Payload) {
+          throw new Error('No response from Lambda function');
+        }
+
+        const responseText = new TextDecoder().decode(lambdaResponse.Payload);
+        const lambdaResult = JSON.parse(responseText);
+
+        if (lambdaResult.statusCode !== 200) {
+          const errorBody = JSON.parse(lambdaResult.body || '{}');
+          throw new Error(errorBody.error || 'Lambda function returned an error');
+        }
+
+        const result = JSON.parse(lambdaResult.body);
+        return NextResponse.json(result);
+      } catch (error: any) {
+        console.error('Lambda invocation error:', error);
+        
+        // If it's a credentials error or function not found, fall back to direct scraping
+        if (
+          error.name === 'ResourceNotFoundException' || 
+          error.message?.includes('Function not found') ||
+          error.message?.includes('credentials') ||
+          error.message?.includes('Could not load credentials')
+        ) {
+          console.log('Lambda not available, falling back to direct scraping');
+          // Fall through to direct scraping below
+        } else {
+          // For other errors, return the error
+          return NextResponse.json(
+            {
+              error: error.message || 'Failed to invoke Lambda function',
+              details: error.toString(),
+            },
+            { status: 500 }
+          );
+        }
       }
+    }
 
-      const responseText = new TextDecoder().decode(lambdaResponse.Payload);
-      const lambdaResult = JSON.parse(responseText);
-
-      if (lambdaResult.statusCode !== 200) {
-        const errorBody = JSON.parse(lambdaResult.body || '{}');
-        throw new Error(errorBody.error || 'Lambda function returned an error');
-      }
-
-      const result = JSON.parse(lambdaResult.body);
-      return NextResponse.json(result);
-    } catch (error: any) {
-      console.error('Lambda invocation error:', error);
-      
-      // Fallback: If Lambda isn't configured, return helpful error
-      if (error.name === 'ResourceNotFoundException' || error.message?.includes('Function not found')) {
-        return NextResponse.json(
-          {
-            error: 'Lambda function not configured',
-            message: 'Please deploy the Lambda function first. See lambda/README.md for instructions.',
-            details: `Function name: ${lambdaFunctionName}, Region: ${lambdaRegion}`,
-          },
-          { status: 503 }
-        );
-      }
-
-      return NextResponse.json(
-        {
-          error: error.message || 'Failed to invoke Lambda function',
-          details: error.toString(),
-        },
-        { status: 500 }
+    // Fallback: Direct scraping (with reduced scope to avoid timeout)
+    console.log('Using direct scraping (Lambda not configured)');
+    
+    if (scrapeType === 'profile') {
+      const result = await scrapeProfileAndPostsByUrl(
+        url,
+        5,  // Only 5 posts to avoid timeout
+        (message, percent) => {
+          console.log(`Progress: ${percent}% - ${message}`);
+        }
       );
+      
+      const response: ScrapeResponse = {
+        type: 'profile',
+        profile: result,
+      };
+      return NextResponse.json(response);
+    } else {
+      const result = await scrapePostCommentsByUrl(
+        url,
+        200,
+        (message, percent) => {
+          console.log(`Progress: ${percent}% - ${message}`);
+        }
+      );
+      
+      const response: ScrapeResponse = {
+        type: 'post',
+        post: result,
+      };
+      return NextResponse.json(response);
     }
   } catch (error: any) {
     console.error('API route error:', error);
