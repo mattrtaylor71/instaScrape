@@ -101,13 +101,16 @@ export async function POST(request: NextRequest) {
       
       const invokeCommand = new InvokeCommand({
         FunctionName: lambdaFunctionName,
-        InvocationType: 'RequestResponse', // Synchronous invocation
+        InvocationType: 'RequestResponse', // Synchronous invocation - waits for response
         Payload: JSON.stringify({
           body: JSON.stringify({ url, mode }),
         }),
       });
 
       console.log(`Invoking Lambda function: ${lambdaFunctionName} in region: ${lambdaRegion}`);
+      console.log(`Note: Amplify API route timeout is ~30 seconds. Lambda timeout is 5-15 minutes.`);
+      console.log(`If scraping takes longer than 30 seconds, the API route will timeout even though Lambda continues.`);
+      
       const lambdaResponse = await lambdaClient.send(invokeCommand);
 
       if (!lambdaResponse.Payload) {
