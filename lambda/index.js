@@ -114,28 +114,28 @@ async function scrapeProfile(url, postsLimit = 5) {
     shortcode: item.shortCode || item.shortcode,
   }));
 
-  // Fetch comments for first 2 posts
-  const postsWithComments = await Promise.all(
-    posts.slice(0, 2).map(async (post) => {
-      if (!post.url || post.url.includes('post-') || !post.commentCount || post.commentCount === 0) {
-        return post;
-      }
+  // Fetch comments for first post only (reduced scope to avoid timeout)
+  // Only fetch if post has comments and a valid URL
+  const firstPost = posts[0];
+  let postsWithComments = [];
+  
+  if (firstPost && firstPost.url && !firstPost.url.includes('post-') && firstPost.commentCount && firstPost.commentCount > 0) {
+    try {
+      console.log(`Fetching comments for first post: ${firstPost.url}`);
+      const commentsResult = await scrapePostComments(firstPost.url, 30); // Reduced to 30 comments
+      postsWithComments = [{
+        ...firstPost,
+        comments: commentsResult.comments,
+      }];
+    } catch (error) {
+      console.warn(`Failed to fetch comments for post ${firstPost.url}:`, error.message);
+      postsWithComments = [firstPost];
+    }
+  } else {
+    postsWithComments = firstPost ? [firstPost] : [];
+  }
 
-      try {
-        console.log(`Fetching comments for post: ${post.url}`);
-        const commentsResult = await scrapePostComments(post.url, 50);
-        return {
-          ...post,
-          comments: commentsResult.comments,
-        };
-      } catch (error) {
-        console.warn(`Failed to fetch comments for post ${post.url}:`, error.message);
-        return post;
-      }
-    })
-  );
-
-  const remainingPosts = posts.slice(2);
+  const remainingPosts = posts.slice(1);
   return {
     profile,
     posts: [...postsWithComments, ...remainingPosts],
@@ -231,13 +231,16 @@ exports.handler = async (event) => {
 
     let result;
     if (scrapeType === 'profile') {
-      const profileResult = await scrapeProfile(url, 5);
+      // Reduced scope: 3 posts, comments only for first post, 30 comments max
+      // This should complete in <30 seconds to avoid Amplify API route timeout
+      const profileResult = await scrapeProfile(url, 3);
       result = {
         type: 'profile',
         profile: profileResult,
       };
     } else {
-      const commentsResult = await scrapePostComments(url, 200);
+      // Reduced scope: 50 comments max for single post scrape
+      const commentsResult = await scrapePostComments(url, 50);
       result = {
         type: 'post',
         post: commentsResult,
