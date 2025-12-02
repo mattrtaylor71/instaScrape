@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const hasApifyToken = !!process.env.APIFY_TOKEN;
   const hasOpenAiKey = !!process.env.OPENAI_API_KEY;
+  const hasLambdaFunctionName = !!process.env.SCRAPE_LAMBDA_FUNCTION_NAME;
+  const hasLambdaRegion = !!process.env.LAMBDA_REGION;
   
   // Don't expose the actual values, just check if they exist
   const apifyTokenLength = process.env.APIFY_TOKEN?.length || 0;
@@ -18,7 +20,8 @@ export async function GET(request: NextRequest) {
     key.includes('APIFY') || 
     key.includes('OPENAI') || 
     key.includes('AMPLIFY') ||
-    key.includes('AWS')
+    key.includes('AWS') ||
+    key.includes('LAMBDA')
   );
   
   // Check for common variations
@@ -27,6 +30,8 @@ export async function GET(request: NextRequest) {
     'NEXT_PUBLIC_APIFY_TOKEN': process.env.NEXT_PUBLIC_APIFY_TOKEN ? 'EXISTS' : 'NOT SET',
     'OPENAI_API_KEY': process.env.OPENAI_API_KEY ? 'EXISTS' : 'NOT SET',
     'NEXT_PUBLIC_OPENAI_API_KEY': process.env.NEXT_PUBLIC_OPENAI_API_KEY ? 'EXISTS' : 'NOT SET',
+    'SCRAPE_LAMBDA_FUNCTION_NAME': process.env.SCRAPE_LAMBDA_FUNCTION_NAME ? 'EXISTS' : 'NOT SET',
+    'LAMBDA_REGION': process.env.LAMBDA_REGION ? 'EXISTS' : 'NOT SET',
   };
   
   return NextResponse.json({
@@ -41,6 +46,14 @@ export async function GET(request: NextRequest) {
       length: openAiKeyLength,
       preview: hasOpenAiKey ? `${process.env.OPENAI_API_KEY?.substring(0, 10)}...` : 'NOT SET',
       value: process.env.OPENAI_API_KEY ? 'SET (hidden)' : 'NOT SET',
+    },
+    lambdaFunctionName: {
+      exists: hasLambdaFunctionName,
+      value: process.env.SCRAPE_LAMBDA_FUNCTION_NAME || 'NOT SET',
+    },
+    lambdaRegion: {
+      exists: hasLambdaRegion,
+      value: process.env.LAMBDA_REGION || 'NOT SET',
     },
     variations,
     relevantEnvVars: relevantEnvKeys,

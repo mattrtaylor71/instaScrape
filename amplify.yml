@@ -16,6 +16,18 @@ frontend:
           else
             echo "OPENAI_API_KEY exists: YES"
           fi
+        - |
+          if [ -z "$SCRAPE_LAMBDA_FUNCTION_NAME" ]; then
+            echo "SCRAPE_LAMBDA_FUNCTION_NAME exists: NO"
+          else
+            echo "SCRAPE_LAMBDA_FUNCTION_NAME exists: YES"
+          fi
+        - |
+          if [ -z "$LAMBDA_REGION" ]; then
+            echo "LAMBDA_REGION exists: NO"
+          else
+            echo "LAMBDA_REGION exists: YES"
+          fi
         - npm ci
     build:
       commands:
@@ -32,6 +44,20 @@ frontend:
           else
             echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env.production
             echo "OPENAI_API_KEY written to .env.production"
+          fi
+        - |
+          if [ -z "$SCRAPE_LAMBDA_FUNCTION_NAME" ]; then
+            echo "WARNING: SCRAPE_LAMBDA_FUNCTION_NAME is not set in Amplify environment variables"
+          else
+            echo "SCRAPE_LAMBDA_FUNCTION_NAME=$SCRAPE_LAMBDA_FUNCTION_NAME" >> .env.production
+            echo "SCRAPE_LAMBDA_FUNCTION_NAME written to .env.production"
+          fi
+        - |
+          if [ -z "$LAMBDA_REGION" ]; then
+            echo "WARNING: LAMBDA_REGION is not set in Amplify environment variables"
+          else
+            echo "LAMBDA_REGION=$LAMBDA_REGION" >> .env.production
+            echo "LAMBDA_REGION written to .env.production"
           fi
         - echo "Contents of .env.production:"
         - cat .env.production || echo "File does not exist"
