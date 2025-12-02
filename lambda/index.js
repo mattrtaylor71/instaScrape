@@ -189,8 +189,14 @@ exports.handler = async (event) => {
   console.log('Lambda scrape handler invoked:', JSON.stringify(event));
 
   try {
+    // Extract jobId from event (top level) or from body
+    const jobId = event.jobId || (event.body ? JSON.parse(event.body).jobId : null);
     const body = JSON.parse(event.body || '{}');
-    const { url, mode = 'auto', jobId } = body;
+    const { url, mode = 'auto' } = body;
+    
+    console.log('Extracted jobId:', jobId);
+    console.log('Extracted url:', url);
+    console.log('Extracted mode:', mode);
     
     // If jobId is provided, we need to update the job status
     // But since we're in Lambda, we can't directly update the Next.js job queue
