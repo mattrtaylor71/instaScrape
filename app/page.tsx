@@ -393,7 +393,7 @@ export default function Home() {
         <div className="text-center mb-12 animate-float">
           <div className="flex items-center justify-center gap-4 mb-4">
             <h1 className="text-6xl font-extrabold gradient-text">
-              Instagram Intelligence
+              Olivia's Instagram Intelligence
             </h1>
             {credits !== null && (
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg animate-pulse-glow">

@@ -114,16 +114,17 @@ async function scrapeProfile(url, postsLimit = 5) {
     shortcode: item.shortCode || item.shortcode,
   }));
 
-  // Fetch comments for first 2 posts
+  // Fetch comments for all posts
   const postsWithComments = await Promise.all(
-    posts.slice(0, 2).map(async (post) => {
+    posts.map(async (post) => {
       if (!post.url || post.url.includes('post-') || !post.commentCount || post.commentCount === 0) {
         return post;
       }
 
       try {
         console.log(`Fetching comments for post: ${post.url}`);
-        const commentsResult = await scrapePostComments(post.url, 50);
+        // Fetch all comments (use a high limit to get all available)
+        const commentsResult = await scrapePostComments(post.url, 1000);
         return {
           ...post,
           comments: commentsResult.comments,
@@ -135,15 +136,15 @@ async function scrapeProfile(url, postsLimit = 5) {
     })
   );
 
-  const remainingPosts = posts.slice(2);
+  // All posts now have comments (or attempted to fetch them)
   return {
     profile,
-    posts: [...postsWithComments, ...remainingPosts],
+    posts: postsWithComments,
   };
 }
 
 // Scrape post comments
-async function scrapePostComments(url, commentsLimit = 50) {
+async function scrapePostComments(url, commentsLimit = 1000) {
   const client = getApifyClient();
   const actorId = 'apify/instagram-comment-scraper';
 
@@ -160,9 +161,9 @@ async function scrapePostComments(url, commentsLimit = 50) {
     throw new Error(`No comments returned from Apify for post: ${url}`);
   }
 
+  // Get all available comments (Apify respects resultsLimit, so we don't need to slice)
   const comments = items
     .filter((item) => item.text && (item.ownerUsername || item.username))
-    .slice(0, commentsLimit)
     .map((item) => ({
       id: item.id || `${item.ownerUsername || item.username}-${item.timestamp || Date.now()}`,
       username: item.ownerUsername || item.username || 'unknown',
@@ -249,7 +250,8 @@ exports.handler = async (event) => {
         profile: profileResult,
       };
     } else {
-      const commentsResult = await scrapePostComments(url, 200);
+      // Fetch all comments for single post
+      const commentsResult = await scrapePostComments(url, 1000);
       result = {
         type: 'post',
         post: commentsResult,
