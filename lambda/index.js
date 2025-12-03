@@ -243,7 +243,7 @@ exports.handler = async (event) => {
 
     let result;
     if (scrapeType === 'profile') {
-      const profileResult = await scrapeProfile(url, 5);
+      const profileResult = await scrapeProfile(url, 10);
       result = {
         type: 'profile',
         profile: profileResult,

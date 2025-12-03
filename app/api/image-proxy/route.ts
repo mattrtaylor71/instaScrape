@@ -16,10 +16,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate that it's an Instagram CDN URL for security
+    // Validate that it's an Instagram/Facebook CDN URL for security
     try {
       const url = new URL(imageUrl);
-      if (!url.hostname.includes('cdninstagram.com') && !url.hostname.includes('instagram.com')) {
+      const hostname = url.hostname.toLowerCase();
+      const isInstagramCDN = hostname.includes('cdninstagram.com') || 
+                            hostname.includes('instagram.com') ||
+                            hostname.includes('fbcdn.net'); // Facebook CDN for Instagram images
+      if (!isInstagramCDN) {
         return NextResponse.json(
           { error: 'Only Instagram CDN URLs are allowed' },
           { status: 400 }

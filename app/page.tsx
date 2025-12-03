@@ -371,8 +371,11 @@ export default function Home() {
   // Helper function to proxy Instagram images through our API to bypass CORS
   const getProxiedImageUrl = (url: string | undefined): string | undefined => {
     if (!url) return undefined;
-    // Only proxy Instagram CDN URLs
-    if (url.includes('cdninstagram.com') || url.includes('instagram.com')) {
+    // Proxy Instagram/Facebook CDN URLs (fbcdn.net is Facebook's CDN for Instagram)
+    const urlLower = url.toLowerCase();
+    if (urlLower.includes('cdninstagram.com') || 
+        urlLower.includes('instagram.com') || 
+        urlLower.includes('fbcdn.net')) {
       return `/api/image-proxy?url=${encodeURIComponent(url)}`;
     }
     return url;
