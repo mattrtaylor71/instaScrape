@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getJob } from '@/lib/jobQueue';
+import { getJob } from '@/lib/jobQueueS3';
 
 export async function GET(
   request: NextRequest,
@@ -19,15 +19,17 @@ export async function GET(
       );
     }
 
-    const job = getJob(jobId);
+    const job = await getJob(jobId);
     console.log(`Job found: ${job ? 'YES' : 'NO'}`);
     if (job) {
       console.log(`Job status: ${job.status}`);
       console.log(`Job has result: ${!!job.result}`);
       console.log(`Job has error: ${!!job.error}`);
     } else {
-      console.log('⚠️ Job not found in memory. This might be a serverless instance issue.');
-      console.log('Each API request can hit a different Lambda instance, so in-memory state is not shared.');
+      console.log('⚠️ Job not found in S3. This might mean:');
+      console.log('  - Job was never created');
+      console.log('  - Job expired (older than cleanup period)');
+      console.log('  - S3 bucket/credentials issue');
     }
 
     if (!job) {

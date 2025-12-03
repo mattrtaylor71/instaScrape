@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
-import { createJob, updateJob } from '@/lib/jobQueue';
+import { createJob, updateJob } from '@/lib/jobQueueS3';
 import type { ScrapeRequest, ScrapeResponse } from '@/types/instagram';
 
 function parseInstagramUrl(url: string): 'profile' | 'post' {
@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
 
     try {
       // Create a job for async processing
-      const jobId = createJob();
-      updateJob(jobId, { status: 'processing' });
+      const jobId = await createJob();
+      await updateJob(jobId, { status: 'processing' });
 
       // Configure Lambda client
       const lambdaClient = new LambdaClient({
@@ -111,9 +111,9 @@ export async function POST(request: NextRequest) {
       console.log(`Job ID: ${jobId}`);
       
       // Fire and forget - Lambda will process in background
-      await lambdaClient.send(invokeCommand).catch((error) => {
+      await lambdaClient.send(invokeCommand).catch(async (error) => {
         console.error('Failed to invoke Lambda:', error);
-        updateJob(jobId, {
+        await updateJob(jobId, {
           status: 'failed',
           error: error.message || 'Failed to invoke Lambda function',
         });

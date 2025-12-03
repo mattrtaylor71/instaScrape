@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateJob, getJob } from '@/lib/jobQueue';
+import { updateJob, getJob } from '@/lib/jobQueueS3';
 
 /**
  * Webhook endpoint for Lambda to POST results when scraping completes
@@ -25,12 +25,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if job exists before updating
-    const existingJob = getJob(jobId);
+    const existingJob = await getJob(jobId);
     console.log('Existing job:', existingJob ? `Found (status: ${existingJob.status})` : 'NOT FOUND');
 
     if (error) {
       console.log('Updating job with error:', error);
-      updateJob(jobId, {
+      await updateJob(jobId, {
         status: 'failed',
         error: error.message || error,
       });
@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
     if (result) {
       console.log('Updating job with result. Result type:', result.type);
       console.log('Result size:', JSON.stringify(result).length, 'bytes');
-      updateJob(jobId, {
+      await updateJob(jobId, {
         status: 'completed',
         result,
       });
       
       // Verify update worked
-      const updatedJob = getJob(jobId);
+      const updatedJob = await getJob(jobId);
       console.log('Job updated. New status:', updatedJob?.status);
       console.log('Job has result:', !!updatedJob?.result);
       
