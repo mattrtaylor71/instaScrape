@@ -123,8 +123,8 @@ async function scrapeProfile(url, postsLimit = 5) {
 
       try {
         console.log(`Fetching comments for post: ${post.url}`);
-        // Fetch all comments (use a high limit to get all available)
-        const commentsResult = await scrapePostComments(post.url, 1000);
+        // Fetch top 30 comments per post
+        const commentsResult = await scrapePostComments(post.url, 30);
         return {
           ...post,
           comments: commentsResult.comments,
@@ -144,7 +144,7 @@ async function scrapeProfile(url, postsLimit = 5) {
 }
 
 // Scrape post comments
-async function scrapePostComments(url, commentsLimit = 1000) {
+async function scrapePostComments(url, commentsLimit = 30) {
   const client = getApifyClient();
   const actorId = 'apify/instagram-comment-scraper';
 
@@ -250,8 +250,8 @@ exports.handler = async (event) => {
         profile: profileResult,
       };
     } else {
-      // Fetch all comments for single post
-      const commentsResult = await scrapePostComments(url, 1000);
+      // Fetch top 30 comments for single post
+      const commentsResult = await scrapePostComments(url, 30);
       result = {
         type: 'post',
         post: commentsResult,
