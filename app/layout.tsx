@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Olivia's Instagram Intelligence",
+  title: "Trepo Instagram Intelligence",
   description: 'Analyze Instagram profiles and posts with AI',
 };
 

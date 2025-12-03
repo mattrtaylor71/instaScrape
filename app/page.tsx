@@ -408,7 +408,7 @@ export default function Home() {
         <div className="text-center mb-6 sm:mb-12 animate-float">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold gradient-text px-2">
-              Olivia's Instagram Intelligence
+              Trepo Instagram Intelligence
             </h1>
             {credits !== null && (
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-bold text-sm sm:text-lg shadow-lg animate-pulse-glow whitespace-nowrap">
