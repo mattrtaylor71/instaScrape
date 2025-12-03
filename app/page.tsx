@@ -211,18 +211,20 @@ export default function Home() {
       // Check if we got a jobId (async processing)
       if (data.jobId) {
         setJobId(data.jobId);
-        setLoadingMessage('Scraping in progress...');
+        setLoadingMessage('✨ Gathering Instagram magic...');
+        setLoadingProgress(5);
         // Start polling for results
         pollJobStatus(data.jobId);
       } else {
         // Synchronous response (shouldn't happen with async, but handle it)
         setLoadingProgress(100);
-        setLoadingMessage('Complete!');
+        setLoadingMessage('🎉 All done! Here we go...');
         setTimeout(() => {
           setScrapedData(data);
           setIsScraping(false);
+          // Refresh credits after successful scrape
           fetchCredits();
-        }, 500);
+        }, 800);
       }
     } catch (error: any) {
       setScrapeError(error.message || 'An error occurred while scraping');
@@ -243,13 +245,14 @@ export default function Home() {
 
         if (data.status === 'completed') {
           setLoadingProgress(100);
-          setLoadingMessage('Complete!');
+          setLoadingMessage('🎉 All done! Here we go...');
           setTimeout(() => {
             setScrapedData(data.result);
             setIsScraping(false);
             setJobId(null);
+            // Refresh credits after successful scrape
             fetchCredits();
-          }, 500);
+          }, 800);
           return;
         }
 
@@ -269,10 +272,22 @@ export default function Home() {
           return;
         }
 
-        // Update progress (rough estimate)
+        // Update progress with fun, non-technical messages
         const progress = Math.min(10 + (attempts * 2), 90);
         setLoadingProgress(progress);
-        setLoadingMessage(`Scraping... (${attempts * 5}s)`);
+        
+        // Fun, consumer-friendly messages based on progress
+        const messages = [
+          { min: 0, max: 15, msg: '✨ Gathering Instagram magic...' },
+          { min: 15, max: 30, msg: '📸 Collecting posts and stories...' },
+          { min: 30, max: 50, msg: '💬 Reading all the comments...' },
+          { min: 50, max: 70, msg: '🎨 Organizing everything beautifully...' },
+          { min: 70, max: 85, msg: '🚀 Almost there! Final touches...' },
+          { min: 85, max: 100, msg: '🎉 Almost ready! Just a moment...' },
+        ];
+        
+        const currentMessage = messages.find(m => progress >= m.min && progress < m.max) || messages[messages.length - 1];
+        setLoadingMessage(currentMessage.msg);
 
         // Poll again in 5 seconds
         setTimeout(poll, 5000);
@@ -482,25 +497,62 @@ export default function Home() {
               )}
             </button>
 
-            {/* Loading Animation */}
+            {/* Exciting Loading Animation */}
             {isScraping && (
-              <div className="mt-6 space-y-4">
-                <div className="bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
-                  <div
-                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full transition-all duration-500 ease-out shimmer"
-                    style={{ width: `${loadingProgress}%` }}
-                  ></div>
+              <div className="mt-8 space-y-6 animate-fade-in">
+                {/* Main Progress Bar */}
+                <div className="relative">
+                  <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-full h-6 overflow-hidden shadow-lg border-2 border-white/50">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                      style={{ width: `${loadingProgress}%` }}
+                    >
+                      {/* Shimmer effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                    </div>
+                  </div>
+                  {/* Progress percentage badge */}
+                  <div className="absolute -top-2 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg transform transition-all duration-300"
+                       style={{ right: `calc(${100 - loadingProgress}% - 40px)` }}>
+                    {Math.round(loadingProgress)}%
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 font-medium">{loadingMessage}</span>
-                  <span className="text-purple-600 font-bold">{Math.round(loadingProgress)}%</span>
+
+                {/* Fun Message */}
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 rounded-2xl border-2 border-purple-200 shadow-lg">
+                    <div className="text-3xl animate-bounce">✨</div>
+                    <span className="text-lg font-bold text-gray-800">{loadingMessage}</span>
+                    <div className="text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</div>
+                  </div>
                 </div>
-                <div className="flex justify-center gap-2 mt-4">
-                  {[...Array(5)].map((_, i) => (
+
+                {/* Animated Icons */}
+                <div className="flex justify-center gap-4 mt-6">
+                  {['📸', '💬', '🎨', '🚀', '✨'].map((emoji, i) => (
                     <div
                       key={i}
-                      className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.1}s` }}
+                      className="text-4xl animate-float"
+                      style={{ 
+                        animationDelay: `${i * 0.2}s`,
+                        animationDuration: '2s'
+                      }}
+                    >
+                      {emoji}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pulsing dots */}
+                <div className="flex justify-center gap-3 mt-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse-glow"
+                      style={{ 
+                        animationDelay: `${i * 0.3}s`,
+                        animationDuration: '1.5s'
+                      }}
                     ></div>
                   ))}
                 </div>
