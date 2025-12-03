@@ -402,26 +402,26 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-4 px-3 sm:py-8 sm:px-4">
       <div className="max-w-5xl mx-auto">
         {/* Header with Credits */}
-        <div className="text-center mb-12 animate-float">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <h1 className="text-6xl font-extrabold gradient-text">
+        <div className="text-center mb-6 sm:mb-12 animate-float">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold gradient-text px-2">
               Olivia's Instagram Intelligence
             </h1>
             {credits !== null && (
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg animate-pulse-glow">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-bold text-sm sm:text-lg shadow-lg animate-pulse-glow whitespace-nowrap">
                 💰 {credits.toLocaleString()} Credits
               </div>
             )}
             {credits === null && (
-              <div className="bg-gray-400 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg">
+              <div className="bg-gray-400 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-bold text-sm sm:text-lg shadow-lg whitespace-nowrap">
                 💰 Loading...
               </div>
             )}
           </div>
-          <p className="text-xl text-gray-700 font-medium">
+          <p className="text-base sm:text-lg md:text-xl text-gray-700 font-medium px-2">
             Analyze Instagram profiles and posts with AI-powered insights
           </p>
           <div className="mt-4 flex justify-center gap-2">
@@ -432,15 +432,15 @@ export default function Home() {
         </div>
 
         {/* Scrape Card */}
-        <div className="glass rounded-2xl shadow-2xl p-8 mb-8 border-2 border-white/30">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-            <span className="text-4xl">🔍</span>
+        <div className="glass rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 border-2 border-white/30">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+            <span className="text-3xl sm:text-4xl">🔍</span>
             <span>Scrape Instagram Data</span>
           </h2>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                 Instagram URL
               </label>
               <input
@@ -448,16 +448,16 @@ export default function Home() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://www.instagram.com/username/ or https://www.instagram.com/p/SHORTCODE/"
-                className="w-full px-5 py-4 border-2 border-purple-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all text-lg bg-white/90"
+                className="w-full px-3 py-3 sm:px-5 sm:py-4 border-2 border-purple-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all text-base sm:text-lg bg-white/90"
                 disabled={isScraping}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                 Scrape Mode
               </label>
-              <div className="flex gap-4 flex-wrap">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {(['auto', 'profile', 'post'] as ScrapeMode[]).map((m) => (
                   <label
                     key={m}
@@ -468,10 +468,10 @@ export default function Home() {
                       value={m}
                       checked={mode === m}
                       onChange={(e) => setMode(e.target.value as ScrapeMode)}
-                      className="mr-2 w-5 h-5 text-purple-600 focus:ring-purple-500"
+                      className="mr-2 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 focus:ring-purple-500"
                       disabled={isScraping}
                     />
-                    <span className="text-gray-700 font-medium group-hover:text-purple-600 transition-colors capitalize">
+                    <span className="text-sm sm:text-base text-gray-700 font-medium group-hover:text-purple-600 transition-colors capitalize">
                       {m === 'auto' ? 'Auto detect' : m}
                     </span>
                   </label>
@@ -482,7 +482,7 @@ export default function Home() {
             <button
               onClick={handleScrape}
               disabled={isScraping}
-              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl animate-pulse-glow"
+              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white py-3 px-4 sm:py-4 sm:px-6 rounded-xl font-bold text-base sm:text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl animate-pulse-glow"
             >
               {isScraping ? (
                 <span className="flex items-center justify-center gap-3">
@@ -499,10 +499,10 @@ export default function Home() {
 
             {/* Exciting Loading Animation */}
             {isScraping && (
-              <div className="mt-8 space-y-6 animate-fade-in">
+              <div className="mt-6 sm:mt-8 space-y-4 sm:space-y-6 animate-fade-in">
                 {/* Main Progress Bar */}
                 <div className="relative">
-                  <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-full h-6 overflow-hidden shadow-lg border-2 border-white/50">
+                  <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-full h-5 sm:h-6 overflow-hidden shadow-lg border-2 border-white/50">
                     <div
                       className="h-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
                       style={{ width: `${loadingProgress}%` }}
@@ -512,27 +512,27 @@ export default function Home() {
                     </div>
                   </div>
                   {/* Progress percentage badge */}
-                  <div className="absolute -top-2 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg transform transition-all duration-300"
-                       style={{ right: `calc(${100 - loadingProgress}% - 40px)` }}>
+                  <div className="absolute -top-2 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 sm:px-4 sm:py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg transform transition-all duration-300"
+                       style={{ right: `calc(${100 - loadingProgress}% - 30px)` }}>
                     {Math.round(loadingProgress)}%
                   </div>
                 </div>
 
                 {/* Fun Message */}
                 <div className="text-center">
-                  <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 rounded-2xl border-2 border-purple-200 shadow-lg">
-                    <div className="text-3xl animate-bounce">✨</div>
-                    <span className="text-lg font-bold text-gray-800">{loadingMessage}</span>
-                    <div className="text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</div>
+                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 sm:px-6 sm:py-4 rounded-2xl border-2 border-purple-200 shadow-lg">
+                    <div className="text-2xl sm:text-3xl animate-bounce">✨</div>
+                    <span className="text-sm sm:text-lg font-bold text-gray-800">{loadingMessage}</span>
+                    <div className="text-2xl sm:text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</div>
                   </div>
                 </div>
 
                 {/* Animated Icons */}
-                <div className="flex justify-center gap-4 mt-6">
+                <div className="flex justify-center gap-2 sm:gap-4 mt-4 sm:mt-6">
                   {['📸', '💬', '🎨', '🚀', '✨'].map((emoji, i) => (
                     <div
                       key={i}
-                      className="text-4xl animate-float"
+                      className="text-2xl sm:text-4xl animate-float"
                       style={{ 
                         animationDelay: `${i * 0.2}s`,
                         animationDuration: '2s'
@@ -544,11 +544,11 @@ export default function Home() {
                 </div>
 
                 {/* Pulsing dots */}
-                <div className="flex justify-center gap-3 mt-4">
+                <div className="flex justify-center gap-2 sm:gap-3 mt-3 sm:mt-4">
                   {[...Array(3)].map((_, i) => (
                     <div
                       key={i}
-                      className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse-glow"
+                      className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse-glow"
                       style={{ 
                         animationDelay: `${i * 0.3}s`,
                         animationDuration: '1.5s'
@@ -560,7 +560,7 @@ export default function Home() {
             )}
 
             {scrapeError && (
-              <div className="bg-red-50 border-2 border-red-200 text-red-700 px-5 py-4 rounded-xl font-medium animate-pulse">
+              <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 sm:px-5 sm:py-4 rounded-xl font-medium animate-pulse text-sm sm:text-base">
                 ⚠️ {scrapeError}
               </div>
             )}
@@ -569,22 +569,22 @@ export default function Home() {
 
         {/* Scraped Data Display */}
         {scrapedData && !isScraping && (
-          <div className="glass rounded-2xl shadow-2xl p-8 mb-8 border-2 border-white/30 animate-float">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <span className="text-4xl">📊</span>
+          <div className="glass rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 border-2 border-white/30 animate-float">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+              <span className="text-3xl sm:text-4xl">📊</span>
               <span>Scraped Data</span>
             </h2>
 
             {scrapedData.type === 'profile' && scrapedData.profile && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Profile Header */}
-                <div className="border-b-2 border-purple-200 pb-6">
-                  <div className="flex items-start gap-6">
+                <div className="border-b-2 border-purple-200 pb-4 sm:pb-6">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                     {scrapedData.profile.profile.profilePicUrl && (
                       <img
                         src={getProxiedImageUrl(scrapedData.profile.profile.profilePicUrl)}
                         alt={scrapedData.profile.profile.username}
-                        className="w-24 h-24 rounded-full border-4 border-purple-300 shadow-lg"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-purple-300 shadow-lg flex-shrink-0"
                         onError={(e) => {
                           // Fallback to original URL if proxy fails
                           const target = e.target as HTMLImageElement;
@@ -595,33 +595,33 @@ export default function Home() {
                         }}
                       />
                     )}
-                    <div className="flex-1">
-                      <h3 className="text-3xl font-bold text-gray-800 mb-2">
+                    <div className="flex-1 text-center sm:text-left w-full">
+                      <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
                         @{scrapedData.profile.profile.username}
                       </h3>
                       {scrapedData.profile.profile.fullName && (
-                        <p className="text-xl text-gray-600 font-medium mb-2">
+                        <p className="text-lg sm:text-xl text-gray-600 font-medium mb-2">
                           {scrapedData.profile.profile.fullName}
                         </p>
                       )}
                       {scrapedData.profile.profile.bio && (
-                        <p className="text-gray-700 mb-4 leading-relaxed">
+                        <p className="text-sm sm:text-base text-gray-700 mb-4 leading-relaxed">
                           {scrapedData.profile.profile.bio}
                         </p>
                       )}
-                      <div className="flex gap-6 text-sm">
+                      <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 sm:gap-6 text-xs sm:text-sm">
                         {scrapedData.profile.profile.followers !== undefined && (
-                          <span className="bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-2 rounded-lg font-bold text-purple-700">
+                          <span className="bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-bold text-purple-700 whitespace-nowrap">
                             👥 {scrapedData.profile.profile.followers.toLocaleString()} followers
                           </span>
                         )}
                         {scrapedData.profile.profile.following !== undefined && (
-                          <span className="bg-gradient-to-r from-blue-100 to-purple-100 px-4 py-2 rounded-lg font-bold text-blue-700">
+                          <span className="bg-gradient-to-r from-blue-100 to-purple-100 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-bold text-blue-700 whitespace-nowrap">
                             ➕ {scrapedData.profile.profile.following.toLocaleString()} following
                           </span>
                         )}
                         {scrapedData.profile.profile.postCount !== undefined && (
-                          <span className="bg-gradient-to-r from-pink-100 to-blue-100 px-4 py-2 rounded-lg font-bold text-pink-700">
+                          <span className="bg-gradient-to-r from-pink-100 to-blue-100 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-bold text-pink-700 whitespace-nowrap">
                             📸 {scrapedData.profile.profile.postCount.toLocaleString()} posts
                           </span>
                         )}
@@ -632,21 +632,21 @@ export default function Home() {
 
                 {/* Posts List */}
                 <div>
-                  <h4 className="text-2xl font-bold text-gray-800 mb-4">Recent Posts</h4>
-                  <div className="space-y-4">
+                  <h4 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Recent Posts</h4>
+                  <div className="space-y-3 sm:space-y-4">
                     {scrapedData.profile.posts.length === 0 ? (
-                      <p className="text-gray-500 text-center py-8">No posts found</p>
+                      <p className="text-gray-500 text-center py-6 sm:py-8 text-sm sm:text-base">No posts found</p>
                     ) : (
                       scrapedData.profile.posts.map((post) => (
                         <div
                           key={post.id}
-                          className="border-2 border-purple-200 rounded-xl p-5 bg-white/50 hover:shadow-lg transition-all"
+                          className="border-2 border-purple-200 rounded-xl p-3 sm:p-5 bg-white/50 hover:shadow-lg transition-all"
                         >
                           {post.imageUrl && (
                             <img
                               src={getProxiedImageUrl(post.imageUrl)}
                               alt="Post"
-                              className="w-full max-w-md rounded-lg mb-3 shadow-md"
+                              className="w-full rounded-lg mb-3 shadow-md"
                               onError={(e) => {
                                 // Fallback to original URL if proxy fails
                                 const target = e.target as HTMLImageElement;
@@ -658,11 +658,11 @@ export default function Home() {
                             />
                           )}
                           {post.caption && (
-                            <p className="text-gray-700 mb-3 line-clamp-3 leading-relaxed">
+                            <p className="text-sm sm:text-base text-gray-700 mb-3 line-clamp-3 leading-relaxed">
                               {post.caption}
                             </p>
                           )}
-                          <div className="flex gap-4 text-sm text-gray-600">
+                          <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                             <span>{formatDate(post.timestamp)}</span>
                             {post.likeCount !== undefined && (
                               <span className="font-semibold text-pink-600">
@@ -678,17 +678,17 @@ export default function Home() {
 
                           {/* Comments Section */}
                           {post.comments && post.comments.length > 0 && (
-                            <div className="mt-4 pt-4 border-t-2 border-purple-200">
-                              <h5 className="text-sm font-bold text-gray-700 mb-3">
+                            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t-2 border-purple-200">
+                              <h5 className="text-xs sm:text-sm font-bold text-gray-700 mb-2 sm:mb-3">
                                 💬 Comments ({post.comments.length})
                               </h5>
-                              <div className="space-y-2 max-h-64 overflow-y-auto">
+                              <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
                                 {post.comments.map((comment) => (
                                   <div
                                     key={comment.id}
-                                    className="text-sm border-l-4 border-purple-300 pl-3 py-2 bg-purple-50/50 rounded-r-lg"
+                                    className="text-xs sm:text-sm border-l-4 border-purple-300 pl-2 sm:pl-3 py-1.5 sm:py-2 bg-purple-50/50 rounded-r-lg"
                                   >
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
                                       <span className="font-bold text-purple-700">
                                         @{comment.username}
                                       </span>
@@ -698,14 +698,14 @@ export default function Home() {
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-gray-700">{comment.text}</p>
+                                    <p className="text-gray-700 break-words">{comment.text}</p>
                                     {comment.likeCount !== undefined && comment.likeCount > 0 && (
                                       <span className="text-xs text-gray-500">
                                         ❤️ {comment.likeCount} likes
                                       </span>
                                     )}
                                     {comment.replies && comment.replies.length > 0 && (
-                                      <div className="mt-2 ml-4 border-l-2 border-pink-300 pl-3">
+                                      <div className="mt-2 ml-2 sm:ml-4 border-l-2 border-pink-300 pl-2 sm:pl-3">
                                         <p className="text-xs text-gray-500 mb-1">
                                           {comment.replies.length} replies
                                         </p>
@@ -714,7 +714,7 @@ export default function Home() {
                                             <span className="font-semibold text-xs text-pink-700">
                                               @{reply.username}
                                             </span>
-                                            <p className="text-xs text-gray-700">{reply.text}</p>
+                                            <p className="text-xs text-gray-700 break-words">{reply.text}</p>
                                           </div>
                                         ))}
                                       </div>
@@ -733,15 +733,15 @@ export default function Home() {
             )}
 
             {scrapedData.type === 'post' && scrapedData.post && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {scrapedData.post.post && (
-                  <div className="border-b-2 border-purple-200 pb-6">
-                    <h3 className="text-2xl font-bold mb-3">Post</h3>
+                  <div className="border-b-2 border-purple-200 pb-4 sm:pb-6">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-3">Post</h3>
                     {scrapedData.post.post.imageUrl && (
                       <img
                         src={getProxiedImageUrl(scrapedData.post.post.imageUrl)}
                         alt="Post"
-                        className="w-full max-w-md rounded-lg mb-3 shadow-md"
+                        className="w-full rounded-lg mb-3 shadow-md"
                         onError={(e) => {
                           // Fallback to original URL if proxy fails
                           const target = e.target as HTMLImageElement;
@@ -753,9 +753,9 @@ export default function Home() {
                       />
                     )}
                     {scrapedData.post.post.caption && (
-                      <p className="text-gray-700 mb-3">{scrapedData.post.post.caption}</p>
+                      <p className="text-sm sm:text-base text-gray-700 mb-3 break-words">{scrapedData.post.post.caption}</p>
                     )}
-                    <div className="flex gap-4 text-sm text-gray-600">
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                       <span>{formatDate(scrapedData.post.post.timestamp)}</span>
                       {scrapedData.post.post.likeCount !== undefined && (
                         <span className="font-semibold text-pink-600">
@@ -767,20 +767,20 @@ export default function Home() {
                 )}
 
                 <div>
-                  <h4 className="text-2xl font-bold mb-3">
+                  <h4 className="text-xl sm:text-2xl font-bold mb-3">
                     💬 Comments ({scrapedData.post.comments.length})
                   </h4>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                  <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-96 overflow-y-auto">
                     {scrapedData.post.comments.length === 0 ? (
-                      <p className="text-gray-500">No comments found</p>
+                      <p className="text-gray-500 text-sm sm:text-base">No comments found</p>
                     ) : (
                       scrapedData.post.comments.map((comment) => (
                         <div
                           key={comment.id}
-                          className="border-2 border-purple-200 rounded-lg p-4 bg-white/50"
+                          className="border-2 border-purple-200 rounded-lg p-3 sm:p-4 bg-white/50"
                         >
-                          <div className="flex items-start gap-2 mb-1">
-                            <span className="font-bold text-purple-700">
+                          <div className="flex flex-wrap items-start gap-2 mb-1">
+                            <span className="font-bold text-purple-700 text-sm sm:text-base">
                               @{comment.username}
                             </span>
                             {comment.timestamp && (
@@ -789,7 +789,7 @@ export default function Home() {
                               </span>
                             )}
                           </div>
-                          <p className="text-gray-700">{comment.text}</p>
+                          <p className="text-sm sm:text-base text-gray-700 break-words">{comment.text}</p>
                           {comment.likeCount !== undefined && comment.likeCount > 0 && (
                             <span className="text-xs text-gray-500">
                               ❤️ {comment.likeCount} likes
@@ -807,10 +807,10 @@ export default function Home() {
 
         {/* Q&A Panel */}
         {scrapedData && !isScraping && (
-          <div className="glass rounded-2xl shadow-2xl p-8 border-2 border-white/30">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                <span className="text-4xl">🤖</span>
+          <div className="glass rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 border-2 border-white/30">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2 sm:gap-3">
+                <span className="text-3xl sm:text-4xl">🤖</span>
                 <span>Ask AI</span>
               </h2>
               {conversationHistory.length > 0 && (
@@ -820,7 +820,7 @@ export default function Home() {
                     setAiAnswer(null);
                     setQuestion('');
                   }}
-                  className="text-sm text-purple-600 hover:text-purple-800 font-semibold underline transition-colors"
+                  className="text-xs sm:text-sm text-purple-600 hover:text-purple-800 font-semibold underline transition-colors"
                 >
                   Clear conversation
                 </button>
@@ -828,11 +828,11 @@ export default function Home() {
             </div>
 
             {conversationHistory.length > 0 && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
                 <p className="text-xs text-gray-600 mb-2 font-semibold">
                   💭 Conversation history ({conversationHistory.length / 2} Q&A pairs)
                 </p>
-                <div className="space-y-2 max-h-32 overflow-y-auto text-sm">
+                <div className="space-y-2 max-h-32 overflow-y-auto text-xs sm:text-sm">
                   {conversationHistory.map((msg, idx) => (
                     <div
                       key={idx}
@@ -843,19 +843,19 @@ export default function Home() {
                       <span className="font-bold">
                         {msg.role === 'user' ? 'Q: ' : 'A: '}
                       </span>
-                      <span className="line-clamp-1">{msg.content}</span>
+                      <span className="line-clamp-1 break-words">{msg.content}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                   Ask a question about this {scrapedData.type}
                   {conversationHistory.length > 0 && (
-                    <span className="text-xs text-purple-600 ml-2 font-normal">
+                    <span className="text-xs text-purple-600 ml-2 font-normal block sm:inline">
                       (AI remembers previous questions)
                     </span>
                   )}
@@ -869,7 +869,7 @@ export default function Home() {
                       : "e.g., Summarize the user's most recent posts about beverages."
                   }
                   rows={4}
-                  className="w-full px-5 py-4 border-2 border-purple-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all text-lg bg-white/90 resize-none"
+                  className="w-full px-3 py-3 sm:px-5 sm:py-4 border-2 border-purple-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all text-base sm:text-lg bg-white/90 resize-none"
                   disabled={isAsking}
                 />
               </div>
@@ -877,7 +877,7 @@ export default function Home() {
               <button
                 onClick={handleAsk}
                 disabled={isAsking}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 sm:py-4 sm:px-6 rounded-xl font-bold text-base sm:text-lg hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
               >
                 {isAsking ? (
                   <span className="flex items-center justify-center gap-3">
@@ -893,18 +893,18 @@ export default function Home() {
               </button>
 
               {askError && (
-                <div className="bg-red-50 border-2 border-red-200 text-red-700 px-5 py-4 rounded-xl font-medium">
+                <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 sm:px-5 sm:py-4 rounded-xl font-medium text-sm sm:text-base">
                   ⚠️ {askError}
                 </div>
               )}
 
               {aiAnswer && (
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6 animate-float">
-                  <h3 className="font-bold text-blue-900 mb-3 text-lg flex items-center gap-2">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-4 sm:p-6 animate-float">
+                  <h3 className="font-bold text-blue-900 mb-2 sm:mb-3 text-base sm:text-lg flex items-center gap-2">
                     <span>✨</span>
                     <span>AI Insight</span>
                   </h3>
-                  <p className="text-blue-800 whitespace-pre-wrap leading-relaxed">{aiAnswer}</p>
+                  <p className="text-sm sm:text-base text-blue-800 whitespace-pre-wrap leading-relaxed break-words">{aiAnswer}</p>
                 </div>
               )}
             </div>
