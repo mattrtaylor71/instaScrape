@@ -324,8 +324,8 @@ exports.handler = async (event) => {
     console.error('Lambda error:', error);
     
     // If jobId is provided, notify webhook of failure
-    const body = JSON.parse(event.body || '{}');
-    const { jobId } = body;
+    // Extract jobId from event (top level) or from body
+    const jobId = event.jobId || (event.body ? JSON.parse(event.body).jobId : null);
     
     if (jobId) {
       try {
